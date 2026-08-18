@@ -66,7 +66,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     publishPlaybackState()
                 }
 
-                override fun onCustomAction(action: String?, extras: Bundle?) {
+                override fun onCustomAction(action: String, extras: Bundle?) {
                     if (action == ACTION_RESET_TRIP) {
                         resetTrip()
                     }
