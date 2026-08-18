@@ -3,6 +3,7 @@ name: Build custom fuel economy APK
 on:
   push:
     branches:
+      - master
       - agent/fuel-economy-media
   workflow_dispatch:
 
@@ -19,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: zulu
-          java-version: "17"
+          java-version: "19"
 
       - name: Build release APK
         run: |
