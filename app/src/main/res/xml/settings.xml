@@ -63,6 +63,11 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/media">
+        <Preference
+            android:key="resetFuelTrip"
+            android:persistent="false"
+            android:summary="@string/fuel_media_reset_summary"
+            android:title="@string/fuel_media_reset_title" />
         <CheckBoxPreference
             android:key="mediaBg"
             android:persistent="false"
