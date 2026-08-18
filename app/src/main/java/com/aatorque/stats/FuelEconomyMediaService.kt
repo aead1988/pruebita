@@ -318,9 +318,9 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val price = preferences.getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull() ?: 3.0
         val gallonsPerHour = telemetry.fuelLitersPerHour / FuelEconomySnapshot.US_GALLON_LITERS
         return DisplayText(
-            getString(R.string.mode_fuel_cost_title_format, two(gallonsPerHour)),
-            getString(R.string.mode_fuel_cost_subtitle_format, two(value.distanceKm)),
-            getString(R.string.mode_fuel_cost_description_format, two(value.fuelGallons), money(value.fuelGallons * price))
+            getString(R.string.mode_fuel_cost_title_format, two(gallonsPerHour), two(value.distanceKm)),
+            getString(R.string.mode_fuel_cost_subtitle_format, two(value.fuelGallons), money(value.fuelGallons * price)),
+            value.status
         )
     }
 

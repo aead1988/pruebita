@@ -254,9 +254,8 @@
     <string name="mode_diagnostics_title_format">Temp.: %1$s °C · Batería: %2$s V</string>
     <string name="mode_diagnostics_subtitle_format">Flujo: %1$s L/h · Carga: %2$s%%</string>
     <string name="mode_diagnostics_description_format">%1$s rpm · Combustible: %2$s%% · %3$s</string>
-    <string name="mode_fuel_cost_title_format">Flujo: %1$s gal/h</string>
-    <string name="mode_fuel_cost_subtitle_format">Recorrido: %1$s km</string>
-    <string name="mode_fuel_cost_description_format">Usados: %1$s gal · Costo: %2$s</string>
+    <string name="mode_fuel_cost_title_format">Flujo: %1$s gal/h · %2$s km</string>
+    <string name="mode_fuel_cost_subtitle_format">Usados: %1$s gal · Costo: %2$s</string>
     <string name="fuel_price_per_gallon_title">Precio del combustible por galón</string>
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
     <string name="fuel_tank_gallons_title">Capacidad del tanque en galones</string>
