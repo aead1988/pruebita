@@ -77,6 +77,15 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".FuelEconomyMediaService"
+            android:exported="true"
+            android:label="@string/fuel_media_service_name">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
