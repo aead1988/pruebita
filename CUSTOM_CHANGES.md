@@ -14,12 +14,13 @@ aplicación de mapas independiente para Android Auto.
 ## Mapa
 
 La aplicación se anuncia en Android Auto como **AA Torque Mapa** mediante la Car App Library.
-Dibuja teselas de OpenStreetMap, la posición GPS del vehículo y una tarjeta de consumo sobre la
+Dibuja un mapa esquemático local, la posición GPS del vehículo y una tarjeta de consumo sobre la
 superficie del mapa. Incluye controles para acercar, alejar, centrar y reiniciar el viaje.
 
-El mapa necesita conexión a Internet y permiso de ubicación. La atribución de OpenStreetMap se
-muestra permanentemente. Esta aplicación no modifica ni superpone contenido sobre Google Maps o
-Waze: al abrirla se convierte en el mapa activo de Android Auto.
+El mapa no transmite las coordenadas ni necesita descargar teselas: el GPS se proyecta localmente
+sobre una cuadrícula geográfica y un corredor vial esquemático de Ecuador. Requiere permiso de
+ubicación. Esta aplicación no modifica ni superpone contenido sobre Google Maps o Waze: al abrirla
+se convierte en el mapa activo de Android Auto.
 
 ## Consumo persistente
 
@@ -32,6 +33,6 @@ tiempo y guarda el total cada diez segundos y al cerrar la sesión del automóvi
 - Requiere Torque Pro y un adaptador OBD2 conectado.
 - El vehículo o Torque Pro debe proporcionar un PID de flujo de combustible compatible.
 - La ubicación se concede abriendo AA Torque una vez en el teléfono.
-- Las teselas cartográficas son © colaboradores de OpenStreetMap.
+- El mapa local incluye el corredor Ibarra–Quito–Latacunga–Ambato–Riobamba.
 - Es una variante no oficial y debe instalarse manualmente.
 - El código continúa bajo GNU GPL v3, igual que el proyecto de origen.
