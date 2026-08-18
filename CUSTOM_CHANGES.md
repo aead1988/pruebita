@@ -1,4 +1,4 @@
-# AA Torque 2.0.33 — modos multimedia
+# AA Torque 2.0.34 — modos multimedia
 
 Esta variante se basa en AA Torque 2.0.30 y muestra datos de Torque Pro como una fuente
 multimedia de Android Auto. La vista de mapas experimental fue retirada.
@@ -11,7 +11,7 @@ En la biblioteca de **AA Torque Consumo** se puede elegir uno de estos modos:
 - **Motor:** RPM, temperatura del refrigerante, carga, voltaje y velocidad.
 - **Viaje:** distancia, duración, velocidad media, costo estimado y autonomía.
 - **Diagnóstico:** temperatura, voltaje, flujo de combustible, carga, RPM y nivel del tanque.
-- **Automático:** alterna los cuatro modos anteriores cada ocho segundos.
+- **Combustible y costo:** flujo instantáneo en gal/h, kilómetros recorridos, galones usados y costo acumulado.
 
 El botón de siguiente pista también cambia al modo siguiente. Android Auto controla qué campos
 y botones son visibles según la pantalla y el vehículo.

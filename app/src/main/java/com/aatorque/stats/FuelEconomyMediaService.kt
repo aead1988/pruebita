@@ -12,7 +12,6 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.IBinder
-import android.os.SystemClock
 import android.service.media.MediaBrowserService
 import androidx.preference.PreferenceManager
 import org.prowl.torque.remote.ITorqueService
@@ -258,13 +257,12 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
-        val mode = effectiveMode()
-        val text = when (mode) {
+        val text = when (selectedMode) {
             DisplayMode.CONSUMPTION -> consumptionText(value)
             DisplayMode.ENGINE -> engineText(value)
             DisplayMode.TRIP -> tripText(value)
             DisplayMode.DIAGNOSTICS -> diagnosticsText(value)
-            DisplayMode.AUTO -> consumptionText(value)
+            DisplayMode.FUEL_COST -> fuelCostText(value)
         }
         val artwork = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         mediaSession.setMetadata(
@@ -276,7 +274,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, text.subtitle)
                 .putString(MediaMetadata.METADATA_KEY_ALBUM, text.description)
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION, text.description)
-                .putString(MediaMetadata.METADATA_KEY_GENRE, getString(mode.titleResource))
+                .putString(MediaMetadata.METADATA_KEY_GENRE, getString(selectedMode.titleResource))
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, artwork)
                 .build()
@@ -315,6 +313,17 @@ class FuelEconomyMediaService : MediaBrowserService() {
         getString(R.string.mode_diagnostics_description_format, whole(telemetry.rpm), one(telemetry.fuelLevelPercent), value.status)
     )
 
+    private fun fuelCostText(value: FuelEconomySnapshot): DisplayText {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val price = preferences.getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull() ?: 3.0
+        val gallonsPerHour = telemetry.fuelLitersPerHour / FuelEconomySnapshot.US_GALLON_LITERS
+        return DisplayText(
+            getString(R.string.mode_fuel_cost_title_format, two(gallonsPerHour)),
+            getString(R.string.mode_fuel_cost_subtitle_format, two(value.distanceKm)),
+            getString(R.string.mode_fuel_cost_description_format, two(value.fuelGallons), money(value.fuelGallons * price))
+        )
+    }
+
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
             PlaybackState.ACTION_STOP or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
@@ -340,12 +349,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private fun loadMode(): DisplayMode {
         val name = getSharedPreferences(MODE_PREFS, MODE_PRIVATE).getString(MODE_KEY, null)
         return DisplayMode.entries.firstOrNull { it.name == name } ?: DisplayMode.CONSUMPTION
-    }
-
-    private fun effectiveMode(): DisplayMode {
-        if (selectedMode != DisplayMode.AUTO) return selectedMode
-        val automatic = listOf(DisplayMode.CONSUMPTION, DisplayMode.ENGINE, DisplayMode.TRIP, DisplayMode.DIAGNOSTICS)
-        return automatic[((SystemClock.elapsedRealtime() / AUTO_MODE_INTERVAL_MS) % automatic.size).toInt()]
     }
 
     private fun resetTrip() {
@@ -459,7 +462,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         ENGINE("mode_engine", R.string.mode_engine, R.string.mode_engine_summary),
         TRIP("mode_trip", R.string.mode_trip, R.string.mode_trip_summary),
         DIAGNOSTICS("mode_diagnostics", R.string.mode_diagnostics, R.string.mode_diagnostics_summary),
-        AUTO("mode_auto", R.string.mode_auto, R.string.mode_auto_summary);
+        FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 
@@ -476,7 +479,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val NANOS_PER_SECOND = 1_000_000_000.0
         private const val MAX_SAMPLE_GAP_NANOS = 5_000_000_000L
         private const val PERSIST_INTERVAL_NANOS = 10_000_000_000L
-        private const val AUTO_MODE_INTERVAL_MS = 8_000L
         private const val MODE_PREFS = "fuel_display_mode"
         private const val MODE_KEY = "selected_mode"
         private const val PREF_FUEL_PRICE = "fuelPricePerGallon"
