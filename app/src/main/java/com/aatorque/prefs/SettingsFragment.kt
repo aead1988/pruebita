@@ -1,6 +1,7 @@
 package com.aatorque.prefs
 
 import android.content.Intent
+import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -16,6 +17,7 @@ import androidx.preference.SeekBarPreference
 import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.NotiService
 import com.aatorque.stats.R
+import com.aatorque.stats.FuelEconomyStore
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,6 +38,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var opacityPref: SeekBarPreference
     lateinit var darkenArtPref: SeekBarPreference
     lateinit var blurArtPref: SeekBarPreference
+    lateinit var resetFuelTripPref: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +54,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         opacityPref = findPreference("gaugeOpacity")!!
         blurArtPref = findPreference("blurArtwork")!!
         darkenArtPref = findPreference("darkenArtwork")!!
+        resetFuelTripPref = findPreference("resetFuelTrip")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         fontPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         backgroundPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -153,6 +157,20 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         blurArtPref.isVisible = Build.VERSION.SDK_INT >= 31
 
+        updateFuelTripSummary()
+        resetFuelTripPref.setOnPreferenceClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.fuel_media_reset_title)
+                .setMessage(R.string.fuel_media_reset_confirm)
+                .setPositiveButton(R.string.fuel_media_reset) { _, _ ->
+                    FuelEconomyStore(requireContext()).reset()
+                    updateFuelTripSummary()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            true
+        }
+
         numScreensPref.setOnBindEditTextListener {
             it.inputType = InputType.TYPE_CLASS_NUMBER
         }
@@ -209,5 +227,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onStart() {
         super.onStart()
         (requireActivity() as SettingsActivity).supportActionBar!!.subtitle = null
+        updateFuelTripSummary()
+    }
+
+    private fun updateFuelTripSummary() {
+        val trip = FuelEconomyStore(requireContext()).load()
+        val average = trip.averageKmPerGallon?.let { String.format(java.util.Locale.US, "%.1f", it) } ?: "--"
+        resetFuelTripPref.summary = getString(
+            R.string.fuel_media_reset_current,
+            String.format(java.util.Locale.US, "%.2f", trip.distanceKm),
+            String.format(java.util.Locale.US, "%.2f", trip.fuelGallons),
+            average
+        )
     }
 }
