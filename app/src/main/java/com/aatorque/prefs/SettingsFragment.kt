@@ -13,6 +13,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.NotiService
@@ -184,6 +185,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 minMaxBelowPref.isChecked = it.minMaxBelow
                 mediaBgPref.isChecked =
                     it.albumArt && NotiService.isNotificationAccessEnabled(requireContext())
+                PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    .edit()
+                    .putBoolean(PREF_SPOTIFY_ARTWORK, it.albumArt)
+                    .apply()
                 opacityPref.value = if (it.opacity == 0) 100 else it.opacity
                 blurArtPref.value = it.blurArt
                 darkenArtPref.value = it.darkenArt
@@ -239,5 +244,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             String.format(java.util.Locale.US, "%.2f", trip.fuelGallons),
             average
         )
+    }
+
+    companion object {
+        private const val PREF_SPOTIFY_ARTWORK = "spotifyArtworkEnabled"
     }
 }

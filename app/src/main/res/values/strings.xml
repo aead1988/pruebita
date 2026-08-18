@@ -174,8 +174,8 @@
     <string name="minmax_below">Min/Max below gauge</string>
     <string name="minmax_below_desc">Place min/max values below gauge instead of overlapping the bottom of the gauge</string>
     <string name="media">Media</string>
-    <string name="media_background_title">Media background</string>
-    <string name="media_background_summary">Use album art as background (beta)</string>
+    <string name="media_background_title">Spotify cover background</string>
+    <string name="media_background_summary">Use the currently playing Spotify cover in AA Torque and Android Auto</string>
     <string name="opacity_title">Gauge opacity</string>
     <string name="opacity_summary">Dim gauges to show more of background</string>
     <string name="media_blur_title">Blur artwork</string>

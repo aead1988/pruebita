@@ -3,12 +3,14 @@ package com.aatorque.stats
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaDescription
 import android.media.MediaMetadata
 import android.media.browse.MediaBrowser.MediaItem
 import android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE
 import android.media.session.MediaSession
+import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.IBinder
@@ -98,7 +100,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             result.sendResult(mutableListOf())
             return
         }
-        val artwork = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val artwork = spotifyArtwork() ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         val items = DisplayMode.entries.map { mode ->
             val description = MediaDescription.Builder()
                 .setMediaId(mode.mediaId)
@@ -275,9 +277,46 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 .putString(MediaMetadata.METADATA_KEY_ALBUM, text.description)
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION, text.description)
                 .putString(MediaMetadata.METADATA_KEY_GENRE, getString(selectedMode.titleResource))
+                .putBitmap(MediaMetadata.METADATA_KEY_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, artwork)
                 .build()
+        )
+    }
+
+    private fun spotifyArtwork(): Bitmap? {
+        val enabled = PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean(PREF_SPOTIFY_ARTWORK, false)
+        if (!enabled) return null
+        if (!NotiService.isNotificationAccessEnabled(this)) return null
+        return try {
+            val manager = getSystemService(MediaSessionManager::class.java)
+            val listener = ComponentName(this, NotiService::class.java)
+            val metadata = manager.getActiveSessions(listener)
+                .firstOrNull { it.packageName == SPOTIFY_PACKAGE }
+                ?.metadata
+            val artwork = metadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+                ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+                ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
+            artwork?.let(::fitArtworkForMediaSession)
+        } catch (error: SecurityException) {
+            Timber.w(error, "Notification access is required for Spotify artwork")
+            null
+        } catch (error: Exception) {
+            Timber.w(error, "Unable to read Spotify artwork")
+            null
+        }
+    }
+
+    private fun fitArtworkForMediaSession(artwork: Bitmap): Bitmap {
+        val longestSide = maxOf(artwork.width, artwork.height)
+        if (longestSide <= MAX_ARTWORK_EDGE_PX) return artwork
+        val scale = MAX_ARTWORK_EDGE_PX.toDouble() / longestSide
+        return Bitmap.createScaledBitmap(
+            artwork,
+            (artwork.width * scale).toInt().coerceAtLeast(1),
+            (artwork.height * scale).toInt().coerceAtLeast(1),
+            true
         )
     }
 
@@ -483,5 +522,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val MODE_KEY = "selected_mode"
         private const val PREF_FUEL_PRICE = "fuelPricePerGallon"
         private const val PREF_TANK_GALLONS = "fuelTankGallons"
+        private const val PREF_SPOTIFY_ARTWORK = "spotifyArtworkEnabled"
+        private const val SPOTIFY_PACKAGE = "com.spotify.music"
+        private const val MAX_ARTWORK_EDGE_PX = 384
     }
 }

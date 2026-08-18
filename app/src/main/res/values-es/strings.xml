@@ -194,8 +194,8 @@
     <string name="minmax_below">Min/Max debajo de aguja</string>
     <string name="minmax_below_desc">Colocar valores min/max debajo del indicador en lugar de superponer en el fondo del indicador</string>
     <string name="media">Medios</string>
-    <string name="media_background_title">Medios como fondo</string>
-    <string name="media_background_summary">Usar portada de album como fondo (beta)</string>
+    <string name="media_background_title">Portada de Spotify como fondo</string>
+    <string name="media_background_summary">Usar la portada activa de Spotify en AA Torque y Android Auto</string>
     <string name="opacity_title">Opacidad de indicador</string>
     <string name="opacity_summary">Oscurecer agujas para mostrar mas del fondo</string>
     <string name="media_blur_title">Difuminar portada de medios</string>
