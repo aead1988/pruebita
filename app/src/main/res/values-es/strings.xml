@@ -231,4 +231,16 @@
     <string name="fuel_media_reset_summary">Conserva distancia y combustible aunque apagues el vehículo</string>
     <string name="fuel_media_reset_confirm">La distancia y el combustible consumido volverán a cero. Esta acción no se puede deshacer.</string>
     <string name="fuel_media_reset_current">Actual: %1$s km · %2$s gal · %3$s km/gal. Toca para reiniciar.</string>
+    <string name="fuel_map_service_name">AA Torque Mapa</string>
+    <string name="fuel_map_average">PROMEDIO  %1$s km/gal</string>
+    <string name="fuel_map_instant">Instantáneo  %1$s km/gal</string>
+    <string name="fuel_map_trip">%1$s km  ·  %2$s gal</string>
+    <string name="fuel_map_waiting">Esperando Torque Pro</string>
+    <string name="fuel_map_location_required">Abre AA Torque en el teléfono y permite la ubicación</string>
+    <string name="fuel_map_loading">Cargando mapa local…</string>
+    <string name="fuel_map_reset">Reiniciar viaje</string>
+    <string name="fuel_map_recenter">Centrar</string>
+    <string name="fuel_map_zoom_in">Acercar</string>
+    <string name="fuel_map_zoom_out">Alejar</string>
+    <string name="fuel_map_attribution">Mapa local · el GPS permanece en este teléfono</string>
 </resources>
