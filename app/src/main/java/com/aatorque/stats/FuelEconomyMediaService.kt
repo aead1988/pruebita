@@ -100,7 +100,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             result.sendResult(mutableListOf())
             return
         }
-        val artwork = spotifyArtwork() ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val artwork = spotifyArtwork()?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         val items = DisplayMode.entries.map { mode ->
             val description = MediaDescription.Builder()
                 .setMediaId(mode.mediaId)
@@ -266,10 +266,12 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.DIAGNOSTICS -> diagnosticsText(value)
             DisplayMode.FUEL_COST -> fuelCostText(value)
         }
-        val artwork = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val spotifyArtwork = spotifyArtwork()
+        val artwork = spotifyArtwork?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val mediaId = selectedMode.mediaId + ":" + (spotifyArtwork?.key ?: "default")
         mediaSession.setMetadata(
             MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, selectedMode.mediaId)
+                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, mediaId)
                 .putString(MediaMetadata.METADATA_KEY_TITLE, text.title)
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, text.title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, text.subtitle)
@@ -284,7 +286,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         )
     }
 
-    private fun spotifyArtwork(): Bitmap? {
+    private fun spotifyArtwork(): SpotifyMediaArtwork? {
         val enabled = PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(PREF_SPOTIFY_ARTWORK, false)
         if (!enabled) return null
@@ -298,7 +300,18 @@ class FuelEconomyMediaService : MediaBrowserService() {
             val artwork = metadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
                 ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                 ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
-            artwork?.let(::fitArtworkForMediaSession)
+            if (artwork != null) {
+                val key = listOf(
+                    metadata?.getString(MediaMetadata.METADATA_KEY_MEDIA_ID),
+                    metadata?.getString(MediaMetadata.METADATA_KEY_TITLE),
+                    metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM)
+                ).joinToString(":") + ":" + artwork.generationId
+                SpotifyMediaArtwork(fitArtworkForMediaSession(artwork), key)
+            } else {
+                NotiService.currentSpotifyArtwork()?.let {
+                    SpotifyMediaArtwork(fitArtworkForMediaSession(it.bitmap), it.key)
+                }
+            }
         } catch (error: SecurityException) {
             Timber.w(error, "Notification access is required for Spotify artwork")
             null
@@ -462,6 +475,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private data class DisplayText(val title: String, val subtitle: String, val description: String)
+    private data class SpotifyMediaArtwork(val bitmap: Bitmap, val key: String)
     private data class PidCandidate(val pid: String, val name: String, val unit: String)
     private data class TelemetryPid(
         val metric: Metric,

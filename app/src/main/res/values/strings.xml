@@ -238,8 +238,8 @@
     <string name="mode_diagnostics_title_format">Temp: %1$s °C · Battery: %2$s V</string>
     <string name="mode_diagnostics_subtitle_format">Flow: %1$s L/h · Load: %2$s%%</string>
     <string name="mode_diagnostics_description_format">%1$s rpm · Fuel: %2$s%% · %3$s</string>
-    <string name="mode_fuel_cost_title_format">Flow: %1$s gal/h · %2$s km</string>
-    <string name="mode_fuel_cost_subtitle_format">Used: %1$s gal · Cost: %2$s</string>
+    <string name="mode_fuel_cost_title_format">%1$s gal/h · %2$s km</string>
+    <string name="mode_fuel_cost_subtitle_format">%1$s gal · %2$s</string>
     <string name="fuel_price_per_gallon_title">Fuel price per gallon</string>
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>
