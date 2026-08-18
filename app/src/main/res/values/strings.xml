@@ -221,10 +221,10 @@
     <string name="fuel_map_trip">%1$s km  ·  %2$s gal</string>
     <string name="fuel_map_waiting">Waiting for Torque Pro</string>
     <string name="fuel_map_location_required">Open AA Torque on the phone and allow location</string>
-    <string name="fuel_map_loading">Loading map…</string>
+    <string name="fuel_map_loading">Loading offline map…</string>
     <string name="fuel_map_reset">Reset trip</string>
     <string name="fuel_map_recenter">Recenter</string>
     <string name="fuel_map_zoom_in">Zoom in</string>
     <string name="fuel_map_zoom_out">Zoom out</string>
-    <string name="fuel_map_attribution">© OpenStreetMap contributors</string>
+    <string name="fuel_map_attribution">Offline map · GPS stays on this phone</string>
 </resources>
