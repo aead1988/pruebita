@@ -237,10 +237,10 @@
     <string name="fuel_map_trip">%1$s km  ·  %2$s gal</string>
     <string name="fuel_map_waiting">Esperando Torque Pro</string>
     <string name="fuel_map_location_required">Abre AA Torque en el teléfono y permite la ubicación</string>
-    <string name="fuel_map_loading">Cargando mapa…</string>
+    <string name="fuel_map_loading">Cargando mapa local…</string>
     <string name="fuel_map_reset">Reiniciar viaje</string>
     <string name="fuel_map_recenter">Centrar</string>
     <string name="fuel_map_zoom_in">Acercar</string>
     <string name="fuel_map_zoom_out">Alejar</string>
-    <string name="fuel_map_attribution">© colaboradores de OpenStreetMap</string>
+    <string name="fuel_map_attribution">Mapa local · el GPS permanece en este teléfono</string>
 </resources>
