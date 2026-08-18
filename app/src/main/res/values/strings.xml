@@ -215,4 +215,16 @@
     <string name="fuel_media_reset_summary">Keeps distance and fuel after switching off the vehicle</string>
     <string name="fuel_media_reset_confirm">Distance and consumed fuel will return to zero. This cannot be undone.</string>
     <string name="fuel_media_reset_current">Current: %1$s km · %2$s gal · %3$s km/gal. Tap to reset.</string>
+    <string name="fuel_map_service_name">AA Torque Map</string>
+    <string name="fuel_map_average">AVERAGE  %1$s km/gal</string>
+    <string name="fuel_map_instant">Instant  %1$s km/gal</string>
+    <string name="fuel_map_trip">%1$s km  ·  %2$s gal</string>
+    <string name="fuel_map_waiting">Waiting for Torque Pro</string>
+    <string name="fuel_map_location_required">Open AA Torque on the phone and allow location</string>
+    <string name="fuel_map_loading">Loading map…</string>
+    <string name="fuel_map_reset">Reset trip</string>
+    <string name="fuel_map_recenter">Recenter</string>
+    <string name="fuel_map_zoom_in">Zoom in</string>
+    <string name="fuel_map_zoom_out">Zoom out</string>
+    <string name="fuel_map_attribution">© OpenStreetMap contributors</string>
 </resources>
