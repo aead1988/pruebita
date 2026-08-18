@@ -300,7 +300,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val price = preferences.getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull() ?: 3.0
         val tankGallons = preferences.getString(PREF_TANK_GALLONS, "11.90")?.toDoubleOrNull() ?: 11.9
         val remainingGallons = telemetry.fuelLevelPercent?.let { tankGallons * it.coerceIn(0.0, 100.0) / 100.0 }
-        val range = if (remainingGallons != null && value.averageKmPerGallon != null) remainingGallons * value.averageKmPerGallon else null
+        val averageKmPerGallon = value.averageKmPerGallon
+        val range = if (remainingGallons != null && averageKmPerGallon != null) remainingGallons * averageKmPerGallon else null
         return DisplayText(
             getString(R.string.mode_trip_title_format, two(value.distanceKm), duration(value.elapsedSeconds)),
             getString(R.string.mode_trip_subtitle_format, one(value.averageSpeedKph), money(value.fuelGallons * price)),
