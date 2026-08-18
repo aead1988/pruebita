@@ -1,10 +1,10 @@
-name: Build AA Torque Map APK
+name: Build custom fuel economy APK
 
 on:
   push:
     branches:
       - master
-      - agent/fuel-economy-map
+      - agent/media-modes
   workflow_dispatch:
 
 jobs:
@@ -29,11 +29,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.32-mapa.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.33-modos.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.32-mapa
-          path: app/build/outputs/apk/release/AA-Torque-2.0.32-mapa.apk
+          name: AA-Torque-2.0.33-modos
+          path: app/build/outputs/apk/release/AA-Torque-2.0.33-modos.apk
           if-no-files-found: error

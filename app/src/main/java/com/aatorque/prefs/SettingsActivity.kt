@@ -1,6 +1,5 @@
 package com.aatorque.prefs
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
@@ -19,7 +18,6 @@ import android.os.Environment
 import android.view.Menu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
@@ -53,10 +51,6 @@ import javax.net.ssl.SSLException
 
 class SettingsActivity : AppCompatActivity(),
     PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
-
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* The map screen reports if permission is still unavailable. */ }
 
     val br: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -95,18 +89,6 @@ class SettingsActivity : AppCompatActivity(),
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
         supportActionBar!!.setDisplayUseLogoEnabled(true)
         if (savedInstanceState == null) {
             supportFragmentManager
