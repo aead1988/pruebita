@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - master
-      - agent/media-modes
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
