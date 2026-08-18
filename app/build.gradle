@@ -112,6 +112,8 @@ dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
     implementation "androidx.datastore:datastore-preferences:1.1.1"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.car.app:app:1.7.0'
+    implementation 'androidx.car.app:app-projected:1.7.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.8.5'
     implementation project(':speedviewlib')
 
