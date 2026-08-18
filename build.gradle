@@ -19,14 +19,9 @@ buildscript {
     }
 }
 
-plugins {
-    // id 'com.google.dagger.hilt.android' version '2.44' apply false
-    id 'org.jetbrains.kotlin.android' version "$kotlin_version" apply false
-}
-
 ext {
-    sourceCompatibility = JavaVersion.VERSION_19
-    targetCompatibility = JavaVersion.VERSION_19
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 allprojects {
@@ -48,4 +43,3 @@ allprojects {
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
-
