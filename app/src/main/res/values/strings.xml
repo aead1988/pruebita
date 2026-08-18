@@ -196,4 +196,23 @@
     <string name="value">Value</string>
     <string name="color">Color</string>
     <string name="invalid_settings">Attempted to import invalid settings file.</string>
+    <string name="fuel_media_service_name">AA Torque Fuel Economy</string>
+    <string name="fuel_media_item_title">Fuel economy</string>
+    <string name="fuel_media_item_subtitle">Live and persistent trip data</string>
+    <string name="fuel_media_waiting">Waiting for Torque Pro</string>
+    <string name="fuel_media_disconnected">Torque Pro disconnected</string>
+    <string name="fuel_media_torque_required">Open Torque Pro and connect the OBD2 adapter</string>
+    <string name="fuel_media_no_flow_pid">Fuel-flow PID not available</string>
+    <string name="fuel_media_pid_error">Unable to read Torque Pro PIDs</string>
+    <string name="fuel_media_recording">Recording trip</string>
+    <string name="fuel_media_paused">Trip paused</string>
+    <string name="fuel_media_trip_reset">Trip reset</string>
+    <string name="fuel_media_title_format">Average: %1$s km/gal</string>
+    <string name="fuel_media_artist_format">Instant: %1$s km/gal · %2$s</string>
+    <string name="fuel_media_album_format">%1$s km · %2$s gal used</string>
+    <string name="fuel_media_reset">Reset</string>
+    <string name="fuel_media_reset_title">Reset fuel trip</string>
+    <string name="fuel_media_reset_summary">Keeps distance and fuel after switching off the vehicle</string>
+    <string name="fuel_media_reset_confirm">Distance and consumed fuel will return to zero. This cannot be undone.</string>
+    <string name="fuel_media_reset_current">Current: %1$s km · %2$s gal · %3$s km/gal. Tap to reset.</string>
 </resources>

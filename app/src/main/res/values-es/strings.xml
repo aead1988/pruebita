@@ -212,4 +212,23 @@
     <string name="condition">Condición</string>
     <string name="value">Valor</string>
     <string name="color">Color</string>
+    <string name="fuel_media_service_name">AA Torque Consumo</string>
+    <string name="fuel_media_item_title">Rendimiento de combustible</string>
+    <string name="fuel_media_item_subtitle">Datos en vivo y viaje persistente</string>
+    <string name="fuel_media_waiting">Esperando Torque Pro</string>
+    <string name="fuel_media_disconnected">Torque Pro desconectado</string>
+    <string name="fuel_media_torque_required">Abre Torque Pro y conecta el adaptador OBD2</string>
+    <string name="fuel_media_no_flow_pid">El PID de flujo de combustible no está disponible</string>
+    <string name="fuel_media_pid_error">No se pudieron leer los PID de Torque Pro</string>
+    <string name="fuel_media_recording">Registrando viaje</string>
+    <string name="fuel_media_paused">Viaje pausado</string>
+    <string name="fuel_media_trip_reset">Viaje reiniciado</string>
+    <string name="fuel_media_title_format">Promedio: %1$s km/gal</string>
+    <string name="fuel_media_artist_format">Instantáneo: %1$s km/gal · %2$s</string>
+    <string name="fuel_media_album_format">%1$s km · %2$s gal consumidos</string>
+    <string name="fuel_media_reset">Reiniciar</string>
+    <string name="fuel_media_reset_title">Reiniciar viaje de combustible</string>
+    <string name="fuel_media_reset_summary">Conserva distancia y combustible aunque apagues el vehículo</string>
+    <string name="fuel_media_reset_confirm">La distancia y el combustible consumido volverán a cero. Esta acción no se puede deshacer.</string>
+    <string name="fuel_media_reset_current">Actual: %1$s km · %2$s gal · %3$s km/gal. Toca para reiniciar.</string>
 </resources>
