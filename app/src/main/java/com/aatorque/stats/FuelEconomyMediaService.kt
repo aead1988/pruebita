@@ -484,7 +484,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
-            PlaybackState.ACTION_STOP or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
+            PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
         val builder = PlaybackState.Builder()
             .setActions(actions)
             .setState(
@@ -492,6 +492,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
                 if (tracking) 1f else 0f
             )
+            .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
