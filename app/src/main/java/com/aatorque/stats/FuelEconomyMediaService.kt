@@ -44,7 +44,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var lastPersistNanos = 0L
     private var tracking = true
     private var observedResetGeneration = 0L
-    private var selectedMode = DisplayMode.CONSUMPTION
+    private var selectedMode = DisplayMode.FUEL_COST
 
     override fun onCreate() {
         super.onCreate()
@@ -291,10 +291,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
         val text = when (selectedMode) {
-            DisplayMode.CONSUMPTION -> consumptionText(value)
-            DisplayMode.ENGINE -> engineText(value)
-            DisplayMode.TRIP -> tripText(value)
-            DisplayMode.DIAGNOSTICS -> diagnosticsText(value)
             DisplayMode.FUEL_COST -> fuelCostText(value)
             DisplayMode.MONTHLY -> monthlyText()
             DisplayMode.DAILY -> dailyText()
@@ -467,7 +463,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun loadMode(): DisplayMode {
         val name = getSharedPreferences(MODE_PREFS, MODE_PRIVATE).getString(MODE_KEY, null)
-        return DisplayMode.entries.firstOrNull { it.name == name } ?: DisplayMode.CONSUMPTION
+        return DisplayMode.entries.firstOrNull { it.name == name } ?: DisplayMode.FUEL_COST
     }
 
     private fun resetTrip() {
@@ -596,10 +592,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val titleResource: Int,
         val subtitleResource: Int
     ) {
-        CONSUMPTION("mode_consumption", R.string.mode_consumption, R.string.mode_consumption_summary),
-        ENGINE("mode_engine", R.string.mode_engine, R.string.mode_engine_summary),
-        TRIP("mode_trip", R.string.mode_trip, R.string.mode_trip_summary),
-        DIAGNOSTICS("mode_diagnostics", R.string.mode_diagnostics, R.string.mode_diagnostics_summary),
         FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
         MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary),
         DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary);

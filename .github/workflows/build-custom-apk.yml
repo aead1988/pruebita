@@ -31,11 +31,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.40-daily-monthly.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.41-essential-modes.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.40-daily-monthly
-          path: app/build/outputs/apk/release/AA-Torque-2.0.40-daily-monthly.apk
+          name: AA-Torque-2.0.41-essential-modes
+          path: app/build/outputs/apk/release/AA-Torque-2.0.41-essential-modes.apk
           if-no-files-found: error
