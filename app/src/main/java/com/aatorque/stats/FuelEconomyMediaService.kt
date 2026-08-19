@@ -309,9 +309,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private fun publishMetadata(value: FuelEconomySnapshot) {
         val text = when (selectedMode) {
             DisplayMode.FUEL_COST -> fuelCostText(value)
-            DisplayMode.MONTHLY -> monthlyText()
             DisplayMode.DAILY -> dailyText()
             DisplayMode.WEEKLY -> weeklyText()
+            DisplayMode.MONTHLY -> monthlyText()
+            DisplayMode.SINCE_REFUEL -> sinceRefuelText(value)
         }
         val spotifyArtwork = spotifyArtwork()
         val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
@@ -467,6 +468,17 @@ class FuelEconomyMediaService : MediaBrowserService() {
         snapshot.status
     )
 
+    private fun sinceRefuelText(value: FuelEconomySnapshot): DisplayText = DisplayText(
+        getString(R.string.mode_since_refuel_title_format, two(value.distanceKm)),
+        getString(
+            R.string.mode_since_refuel_subtitle_format,
+            one(value.averageKmPerGallon),
+            two(value.fuelGallons),
+            money(value.fuelGallons * fuelPricePerGallon())
+        ),
+        value.status
+    )
+
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
@@ -480,8 +492,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
                 if (tracking) 1f else 0f
             )
-            .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
+            .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
     }
@@ -637,7 +649,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
         DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary),
         WEEKLY("mode_weekly", R.string.mode_weekly, R.string.mode_weekly_summary),
-        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary);
+        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary),
+        SINCE_REFUEL("mode_since_refuel", R.string.mode_since_refuel, R.string.mode_since_refuel_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 

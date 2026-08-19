@@ -250,6 +250,8 @@
     <string name="mode_daily_summary">Distancia, promedio, galones y costo total del día</string>
     <string name="mode_weekly">Análisis semanal</string>
     <string name="mode_weekly_summary">Distancia, promedio, galones y costo total de lunes a domingo</string>
+    <string name="mode_since_refuel">Desde tanqueada</string>
+    <string name="mode_since_refuel_summary">Consumo, distancia, promedio y costo desde el último tanque lleno</string>
     <string name="mode_consumption_title_format">Promedio: %1$s km/gal</string>
     <string name="mode_consumption_subtitle_format">Instantáneo: %1$s km/gal · %2$s km/h</string>
     <string name="mode_consumption_description_format">%1$s km · %2$s gal · %3$s</string>
@@ -270,6 +272,8 @@
     <string name="mode_daily_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_weekly_title_format">Semana %1$d · %2$s km</string>
     <string name="mode_weekly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
+    <string name="mode_since_refuel_title_format">Desde tanqueada · %1$s km</string>
+    <string name="mode_since_refuel_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="fuel_price_per_gallon_title">Precio del combustible por galón</string>
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
     <string name="fuel_tank_gallons_title">Capacidad del tanque en galones</string>
