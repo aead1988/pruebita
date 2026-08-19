@@ -15,6 +15,7 @@ import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.IBinder
 import android.service.media.MediaBrowserService
+import android.view.KeyEvent
 import androidx.preference.PreferenceManager
 import org.prowl.torque.remote.ITorqueService
 import timber.log.Timber
@@ -78,7 +79,23 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 }
 
                 override fun onSkipToNext() {
-                    selectMode(selectedMode.next())
+                    forwardSpotifyMediaCommand(KeyEvent.KEYCODE_MEDIA_NEXT)
+                }
+
+                override fun onSkipToPrevious() {
+                    forwardSpotifyMediaCommand(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+                }
+
+                @Suppress("DEPRECATION")
+                override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
+                    val keyEvent = mediaButtonIntent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
+                        ?: return false
+                    if (keyEvent.action != KeyEvent.ACTION_DOWN) return true
+                    return when (keyEvent.keyCode) {
+                        KeyEvent.KEYCODE_MEDIA_NEXT,
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> forwardSpotifyMediaCommand(keyEvent.keyCode)
+                        else -> false
+                    }
                 }
 
                 override fun onPause() {
@@ -477,9 +494,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun dailyText(): DisplayText {
-        val date = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date())
         return DisplayText(
-            getString(R.string.mode_daily_title_format, date, two(dailySnapshot.distanceKm)),
+            getString(R.string.mode_daily_today),
             getString(
                 R.string.mode_daily_subtitle_format,
                 one(dailySnapshot.averageKmPerGallon),
@@ -553,6 +569,26 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
+    private fun forwardSpotifyMediaCommand(keyCode: Int): Boolean {
+        if (!NotiService.isNotificationAccessEnabled(this)) return false
+        return try {
+            val manager = getSystemService(MediaSessionManager::class.java)
+            val listener = ComponentName(this, NotiService::class.java)
+            val controls = manager.getActiveSessions(listener)
+                .firstOrNull { it.packageName == SPOTIFY_PACKAGE }
+                ?.transportControls ?: return false
+            when (keyCode) {
+                KeyEvent.KEYCODE_MEDIA_NEXT -> controls.skipToNext()
+                KeyEvent.KEYCODE_MEDIA_PREVIOUS -> controls.skipToPrevious()
+                else -> return false
+            }
+            true
+        } catch (error: Exception) {
+            Timber.w(error, "Unable to forward physical media button to Spotify")
+            false
+        }
+    }
+
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
             PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
@@ -596,33 +632,48 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun tankFilled() {
+        persistTrip()
+        val report = FuelDriveArchive.exportTankPeriod(
+            this,
+            snapshot,
+            store.tankPeriodStartTimestamp(),
+            journeySnapshot,
+            journeyStartedAt
+        )
+        if (report == null) {
+            val message = if (MonthlyFuelCsvExporter.configuredDirectory(this) == null) {
+                R.string.monthly_history_location_required
+            } else {
+                R.string.tank_report_export_failed
+            }
+            android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
         store.markTankFilled()
         observedResetGeneration = store.resetGeneration()
         snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
         lastSampleNanos = System.nanoTime()
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_tank_filled)))
         publishPlaybackState()
+        android.widget.Toast.makeText(applicationContext, R.string.tank_report_exported, android.widget.Toast.LENGTH_LONG).show()
     }
 
     private fun exportMonthlyCsv() {
-        persistTrip()
-        val journeyResult = FuelDriveArchive.exportJourney(this, journeySnapshot, journeyStartedAt, automatic = false)
-        val backup = if (journeyResult == null) FuelDriveArchive.exportCurrentBackup(this) else null
-        val csv = if (journeyResult == null) MonthlyFuelCsvExporter.export(this) else null
-        val message = if (journeyResult?.success == true || backup != null || csv != null) {
-            R.string.fuel_archive_exported
+        val result = FuelDriveArchive.exportDailySummary(this)
+        val message = if (result != null) {
+            R.string.daily_summary_exported
         } else if (MonthlyFuelCsvExporter.configuredDirectory(this) == null) {
             R.string.monthly_history_location_required
         } else {
-            R.string.fuel_archive_export_failed
+            R.string.daily_summary_export_failed
         }
         android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
     }
 
     private fun archiveCompletedJourney() {
-        val result = FuelDriveArchive.exportJourney(this, journeySnapshot, journeyStartedAt, automatic = true)
-        if (result?.success == true) {
-            Timber.i("Archived journey with %d files and award %s", result.writtenFiles, result.awardTitle)
+        val result = FuelDriveArchive.archiveJourneyAndUpdateDailyCard(this, journeySnapshot, journeyStartedAt)
+        if (result != null) {
+            Timber.i("Updated daily card with %d trips", result.tripCount)
         }
     }
 

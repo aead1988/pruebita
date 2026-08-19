@@ -234,7 +234,7 @@
     <string name="fuel_media_next_mode">Siguiente modo</string>
     <string name="fuel_media_no_song">Sin canción en reproducción</string>
     <string name="fuel_media_tank_filled">Tanque lleno</string>
-    <string name="fuel_media_export_csv">Guardar informes</string>
+    <string name="fuel_media_export_csv">Guardar resumen diario</string>
     <string name="mode_consumption">Consumo</string>
     <string name="mode_consumption_summary">Promedio, instantáneo, distancia y galones</string>
     <string name="mode_engine">Motor</string>
@@ -247,7 +247,7 @@
     <string name="mode_fuel_cost_summary">Datos del viaje desde que se enciende hasta que se apaga el auto</string>
     <string name="mode_monthly">Análisis mensual</string>
     <string name="mode_monthly_summary">Distancia, promedio, galones y costo total del mes</string>
-    <string name="mode_daily">Análisis diario</string>
+    <string name="mode_daily">Hoy</string>
     <string name="mode_daily_summary">Distancia, promedio, galones y costo total del día</string>
     <string name="mode_weekly">Análisis semanal</string>
     <string name="mode_weekly_summary">Distancia, promedio, galones y costo total de lunes a domingo</string>
@@ -272,6 +272,7 @@
     <string name="mode_monthly_title_format">%1$s · %2$s km</string>
     <string name="mode_monthly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_daily_title_format">%1$s · %2$s km</string>
+    <string name="mode_daily_today">Hoy</string>
     <string name="mode_daily_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_weekly_title_format">Semana · %1$s km</string>
     <string name="mode_weekly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
@@ -287,15 +288,15 @@
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
     <string name="fuel_tank_gallons_title">Capacidad del tanque en galones</string>
     <string name="fuel_tank_gallons_summary">Se usa para estimar la autonomía restante</string>
-    <string name="monthly_history_category">Informes, premios y respaldo</string>
+    <string name="monthly_history_category">Informes de consumo y Drive</string>
     <string name="monthly_history_export_title">Exportar historial mensual CSV</string>
     <string name="monthly_history_export_summary">Guarda los meses archivados y el mes actual para analizarlos en Excel o Google Sheets</string>
     <string name="monthly_history_exported">Historial mensual exportado</string>
     <string name="monthly_history_export_failed">No se pudo exportar el historial mensual</string>
     <string name="monthly_history_location_title">Configurar carpeta de Google Drive o almacenamiento</string>
     <string name="monthly_history_location_not_configured">No se ha seleccionado una carpeta</string>
-    <string name="monthly_history_location_configured">Carpeta configurada para resultados, premios y respaldos automáticos</string>
-    <string name="monthly_history_location_saved">Carpeta de informes y premios guardada</string>
+    <string name="monthly_history_location_configured">Carpeta configurada para resúmenes diarios e informes de tanqueada</string>
+    <string name="monthly_history_location_saved">Carpeta de informes guardada</string>
     <string name="monthly_history_location_failed">No se pudo guardar el permiso de la carpeta</string>
     <string name="monthly_history_location_required">Configura primero la carpeta de informes en AA Torque</string>
     <string name="fuel_archive_exported">Resultados, premio y respaldo guardados</string>
@@ -306,4 +307,8 @@
     <string name="fuel_backup_restore_action">Seleccionar respaldo</string>
     <string name="fuel_backup_restored">Respaldo restaurado correctamente</string>
     <string name="fuel_backup_restore_failed">El archivo no es un respaldo válido de AA Torque</string>
+    <string name="daily_summary_exported">Resumen diario actualizado en Drive</string>
+    <string name="daily_summary_export_failed">Todavía no hay viajes finalizados para resumir</string>
+    <string name="tank_report_exported">Informe de la tanqueada guardado en Drive</string>
+    <string name="tank_report_export_failed">No se pudo guardar el informe; la tanqueada no fue reiniciada</string>
 </resources>

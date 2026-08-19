@@ -31,11 +31,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.53-drive-awards.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.54-daily-tank-reports.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.53-drive-awards
-          path: app/build/outputs/apk/release/AA-Torque-2.0.53-drive-awards.apk
+          name: AA-Torque-2.0.54-daily-tank-reports
+          path: app/build/outputs/apk/release/AA-Torque-2.0.54-daily-tank-reports.apk
           if-no-files-found: error

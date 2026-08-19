@@ -218,7 +218,7 @@
     <string name="fuel_media_next_mode">Next mode</string>
     <string name="fuel_media_no_song">No song playing</string>
     <string name="fuel_media_tank_filled">Tank filled</string>
-    <string name="fuel_media_export_csv">Save reports</string>
+    <string name="fuel_media_export_csv">Save daily summary</string>
     <string name="mode_consumption">Consumption</string>
     <string name="mode_consumption_summary">Average, instant, distance and gallons</string>
     <string name="mode_engine">Engine</string>
@@ -231,7 +231,7 @@
     <string name="mode_fuel_cost_summary">Trip data from vehicle start until it is switched off</string>
     <string name="mode_monthly">Monthly analysis</string>
     <string name="mode_monthly_summary">Monthly distance, average consumption, gallons and total cost</string>
-    <string name="mode_daily">Daily analysis</string>
+    <string name="mode_daily">Today</string>
     <string name="mode_daily_summary">Daily distance, average consumption, gallons and total cost</string>
     <string name="mode_weekly">Weekly analysis</string>
     <string name="mode_weekly_summary">Monday-to-Sunday distance, average consumption, gallons and total cost</string>
@@ -256,6 +256,7 @@
     <string name="mode_monthly_title_format">%1$s · %2$s km</string>
     <string name="mode_monthly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_daily_title_format">%1$s · %2$s km</string>
+    <string name="mode_daily_today">Today</string>
     <string name="mode_daily_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_weekly_title_format">Week · %1$s km</string>
     <string name="mode_weekly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
@@ -271,15 +272,15 @@
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>
     <string name="fuel_tank_gallons_summary">Used to estimate the remaining range</string>
-    <string name="monthly_history_category">Reports, awards and backup</string>
+    <string name="monthly_history_category">Fuel reports and Drive</string>
     <string name="monthly_history_export_title">Export monthly history CSV</string>
     <string name="monthly_history_export_summary">Saves archived months and the current month for analysis in Excel or Google Sheets</string>
     <string name="monthly_history_exported">Monthly history exported</string>
     <string name="monthly_history_export_failed">Unable to export monthly history</string>
     <string name="monthly_history_location_title">Configure Google Drive or storage folder</string>
     <string name="monthly_history_location_not_configured">No folder has been selected</string>
-    <string name="monthly_history_location_configured">Folder configured for automatic results, awards and backups</string>
-    <string name="monthly_history_location_saved">Report and awards folder saved</string>
+    <string name="monthly_history_location_configured">Folder configured for daily summaries and tank-period reports</string>
+    <string name="monthly_history_location_saved">Report folder saved</string>
     <string name="monthly_history_location_failed">Unable to save folder permission</string>
     <string name="monthly_history_location_required">Configure the report folder in AA Torque first</string>
     <string name="fuel_archive_exported">Results, award and backup saved</string>
@@ -290,4 +291,8 @@
     <string name="fuel_backup_restore_action">Select backup</string>
     <string name="fuel_backup_restored">Backup restored successfully</string>
     <string name="fuel_backup_restore_failed">This is not a valid AA Torque backup</string>
+    <string name="daily_summary_exported">Daily summary updated in Drive</string>
+    <string name="daily_summary_export_failed">There are no completed trips to summarize yet</string>
+    <string name="tank_report_exported">Tank-period report saved in Drive</string>
+    <string name="tank_report_export_failed">Unable to save the report; tank-period data was not reset</string>
 </resources>
