@@ -226,6 +226,8 @@
     <string name="mode_diagnostics_summary">Flow, level, temperature and status</string>
     <string name="mode_fuel_cost">Fuel and cost</string>
     <string name="mode_fuel_cost_summary">Flow, distance, gallons used and fuel cost</string>
+    <string name="mode_monthly">Monthly analysis</string>
+    <string name="mode_monthly_summary">Monthly distance, average consumption, gallons and total cost</string>
     <string name="mode_consumption_title_format">Average: %1$s km/gal</string>
     <string name="mode_consumption_subtitle_format">Instant: %1$s km/gal · %2$s km/h</string>
     <string name="mode_consumption_description_format">%1$s km · %2$s gal · %3$s</string>
@@ -240,6 +242,8 @@
     <string name="mode_diagnostics_description_format">%1$s rpm · Fuel: %2$s%% · %3$s</string>
     <string name="mode_fuel_cost_title_format">%1$s gal/h · %2$s km</string>
     <string name="mode_fuel_cost_subtitle_format">%1$s gal · %2$s</string>
+    <string name="mode_monthly_title_format">%1$s · %2$s km</string>
+    <string name="mode_monthly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="fuel_price_per_gallon_title">Fuel price per gallon</string>
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>

@@ -18,6 +18,8 @@ import android.service.media.MediaBrowserService
 import androidx.preference.PreferenceManager
 import org.prowl.torque.remote.ITorqueService
 import timber.log.Timber
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -27,11 +29,13 @@ import java.util.concurrent.TimeUnit
 class FuelEconomyMediaService : MediaBrowserService() {
     private lateinit var mediaSession: MediaSession
     private lateinit var store: FuelEconomyStore
+    private lateinit var monthlyStore: MonthlyFuelEconomyStore
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private var refreshTask: ScheduledFuture<*>? = null
     private var torqueService: ITorqueService? = null
     private var torqueBound = false
     private var snapshot = FuelEconomySnapshot(0.0, 0.0)
+    private var monthlySnapshot = MonthlyFuelEconomySnapshot("")
     private var telemetry = VehicleTelemetry()
     private var telemetryPids = emptyList<TelemetryPid>()
     private var lastSampleNanos = 0L
@@ -43,7 +47,9 @@ class FuelEconomyMediaService : MediaBrowserService() {
     override fun onCreate() {
         super.onCreate()
         store = FuelEconomyStore(this)
+        monthlyStore = MonthlyFuelEconomyStore(this)
         snapshot = store.load()
+        monthlySnapshot = monthlyStore.loadCurrent()
         observedResetGeneration = store.resetGeneration()
         selectedMode = loadMode()
         mediaSession = MediaSession(this, "AA Torque selectable telemetry").apply {
@@ -234,10 +240,22 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 (now - lastSampleNanos).coerceAtMost(MAX_SAMPLE_GAP_NANOS) / NANOS_PER_SECOND
             lastSampleNanos = now
             if (tracking && elapsedSeconds > 0.0) {
+                val distanceDelta = telemetry.speedKph * elapsedSeconds / 3600.0
+                val fuelLitersDelta = telemetry.fuelLitersPerHour * elapsedSeconds / 3600.0
+                val price = fuelPricePerGallon()
                 snapshot = snapshot.copy(
-                    distanceKm = snapshot.distanceKm + telemetry.speedKph * elapsedSeconds / 3600.0,
-                    fuelLiters = snapshot.fuelLiters + telemetry.fuelLitersPerHour * elapsedSeconds / 3600.0,
+                    distanceKm = snapshot.distanceKm + distanceDelta,
+                    fuelLiters = snapshot.fuelLiters + fuelLitersDelta,
                     elapsedSeconds = snapshot.elapsedSeconds + elapsedSeconds
+                )
+                if (monthlySnapshot.monthKey != monthlyStore.currentMonthKey()) {
+                    monthlySnapshot = monthlyStore.loadCurrent()
+                }
+                monthlySnapshot = monthlySnapshot.copy(
+                    distanceKm = monthlySnapshot.distanceKm + distanceDelta,
+                    fuelLiters = monthlySnapshot.fuelLiters + fuelLitersDelta,
+                    fuelCost = monthlySnapshot.fuelCost +
+                        fuelLitersDelta / FuelEconomySnapshot.US_GALLON_LITERS * price
                 )
             }
             val instant = if (telemetry.fuelLitersPerHour > 0.01 && telemetry.speedKph > 0.1) {
@@ -265,6 +283,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.TRIP -> tripText(value)
             DisplayMode.DIAGNOSTICS -> diagnosticsText(value)
             DisplayMode.FUEL_COST -> fuelCostText(value)
+            DisplayMode.MONTHLY -> monthlyText()
         }
         val spotifyArtwork = spotifyArtwork()
         val artwork = spotifyArtwork?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
@@ -369,8 +388,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     )
 
     private fun fuelCostText(value: FuelEconomySnapshot): DisplayText {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val price = preferences.getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull() ?: 3.0
+        val price = fuelPricePerGallon()
         val gallonsPerHour = telemetry.fuelLitersPerHour / FuelEconomySnapshot.US_GALLON_LITERS
         return DisplayText(
             getString(R.string.mode_fuel_cost_title_format, two(gallonsPerHour), two(value.distanceKm)),
@@ -378,6 +396,24 @@ class FuelEconomyMediaService : MediaBrowserService() {
             value.status
         )
     }
+
+    private fun monthlyText(): DisplayText {
+        val month = SimpleDateFormat("MMMM", Locale.getDefault()).format(Date())
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        return DisplayText(
+            getString(R.string.mode_monthly_title_format, month, two(monthlySnapshot.distanceKm)),
+            getString(
+                R.string.mode_monthly_subtitle_format,
+                one(monthlySnapshot.averageKmPerGallon),
+                two(monthlySnapshot.fuelGallons),
+                money(monthlySnapshot.fuelCost)
+            ),
+            snapshot.status
+        )
+    }
+
+    private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
+        .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
@@ -421,6 +457,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
         }
         store.save(snapshot.distanceKm, snapshot.fuelLiters, snapshot.elapsedSeconds)
+        monthlySnapshot = monthlyStore.save(monthlySnapshot)
     }
 
     private fun stopRefreshTask() {
@@ -534,7 +571,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         ENGINE("mode_engine", R.string.mode_engine, R.string.mode_engine_summary),
         TRIP("mode_trip", R.string.mode_trip, R.string.mode_trip_summary),
         DIAGNOSTICS("mode_diagnostics", R.string.mode_diagnostics, R.string.mode_diagnostics_summary),
-        FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary);
+        FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
+        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 
