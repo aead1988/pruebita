@@ -218,6 +218,7 @@
     <string name="fuel_media_next_mode">Next mode</string>
     <string name="fuel_media_no_song">No song playing</string>
     <string name="fuel_media_tank_filled">Tank filled</string>
+    <string name="fuel_media_export_csv">Save CSV report</string>
     <string name="mode_consumption">Consumption</string>
     <string name="mode_consumption_summary">Average, instant, distance and gallons</string>
     <string name="mode_engine">Engine</string>
@@ -275,4 +276,10 @@
     <string name="monthly_history_export_summary">Saves archived months and the current month for analysis in Excel or Google Sheets</string>
     <string name="monthly_history_exported">Monthly history exported</string>
     <string name="monthly_history_export_failed">Unable to export monthly history</string>
+    <string name="monthly_history_location_title">Configure CSV report folder</string>
+    <string name="monthly_history_location_not_configured">No folder has been selected</string>
+    <string name="monthly_history_location_configured">Folder configured for automatic saving</string>
+    <string name="monthly_history_location_saved">Report folder saved</string>
+    <string name="monthly_history_location_failed">Unable to save folder permission</string>
+    <string name="monthly_history_location_required">Configure the report folder in AA Torque first</string>
 </resources>

@@ -18,6 +18,7 @@ import android.os.Environment
 import android.view.Menu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
@@ -32,6 +33,7 @@ import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
 import com.aatorque.stats.MonthlyFuelEconomyStore
+import com.aatorque.stats.MonthlyFuelCsvExporter
 import com.aatorque.stats.R
 import com.google.android.material.snackbar.Snackbar
 import com.google.protobuf.InvalidProtocolBufferException
@@ -192,6 +194,10 @@ class SettingsActivity : AppCompatActivity(),
         monthlyFuelCsvLauncher.launch("aa-torque-monthly-fuel-history.csv")
     }
 
+    fun configureMonthlyFuelExportLocation() {
+        monthlyExportDirectoryLauncher.launch(null)
+    }
+
     private fun launchFragment(
         tag: String,
         fragment: Fragment
@@ -269,6 +275,23 @@ class SettingsActivity : AppCompatActivity(),
             }
         }
     }
+
+    private val monthlyExportDirectoryLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+            if (uri != null) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    MonthlyFuelCsvExporter.setDirectory(applicationContext, uri)
+                    Toast.makeText(this, R.string.monthly_history_location_saved, Toast.LENGTH_SHORT).show()
+                } catch (error: SecurityException) {
+                    Timber.e(error, "Unable to persist monthly report directory permission")
+                    Toast.makeText(this, R.string.monthly_history_location_failed, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     class ExportFileContract : ActivityResultContract<String, Uri?>() {
 

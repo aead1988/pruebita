@@ -121,6 +121,11 @@
 
     <PreferenceCategory android:title="@string/monthly_history_category">
         <Preference
+            android:key="monthlyHistoryLocation"
+            android:persistent="false"
+            android:summary="@string/monthly_history_location_not_configured"
+            android:title="@string/monthly_history_location_title" />
+        <Preference
             android:key="exportMonthlyHistoryCsv"
             android:persistent="false"
             android:summary="@string/monthly_history_export_summary"

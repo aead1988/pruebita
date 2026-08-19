@@ -19,6 +19,7 @@ import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.NotiService
 import com.aatorque.stats.R
 import com.aatorque.stats.FuelEconomyStore
+import com.aatorque.stats.MonthlyFuelCsvExporter
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -41,6 +42,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var blurArtPref: SeekBarPreference
     lateinit var resetFuelTripPref: Preference
     lateinit var exportMonthlyHistoryPref: Preference
+    lateinit var monthlyHistoryLocationPref: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +60,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         darkenArtPref = findPreference("darkenArtwork")!!
         resetFuelTripPref = findPreference("resetFuelTrip")!!
         exportMonthlyHistoryPref = findPreference("exportMonthlyHistoryCsv")!!
+        monthlyHistoryLocationPref = findPreference("monthlyHistoryLocation")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         fontPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         backgroundPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -177,6 +180,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             (requireActivity() as SettingsActivity).exportMonthlyFuelHistory()
             true
         }
+        monthlyHistoryLocationPref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).configureMonthlyFuelExportLocation()
+            true
+        }
 
         numScreensPref.setOnBindEditTextListener {
             it.inputType = InputType.TYPE_CLASS_NUMBER
@@ -239,6 +246,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onStart()
         (requireActivity() as SettingsActivity).supportActionBar!!.subtitle = null
         updateFuelTripSummary()
+        updateMonthlyHistoryLocationSummary()
     }
 
     private fun updateFuelTripSummary() {
@@ -250,6 +258,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             String.format(java.util.Locale.US, "%.2f", trip.fuelGallons),
             average
         )
+    }
+
+    private fun updateMonthlyHistoryLocationSummary() {
+        monthlyHistoryLocationPref.summary = if (MonthlyFuelCsvExporter.configuredDirectory(requireContext()) != null) {
+            getString(R.string.monthly_history_location_configured)
+        } else {
+            getString(R.string.monthly_history_location_not_configured)
+        }
     }
 
     companion object {

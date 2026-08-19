@@ -97,6 +97,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                         ACTION_RESET_TRIP -> resetTrip()
                         ACTION_TANK_FILLED -> tankFilled()
                         ACTION_NEXT_MODE -> selectMode(selectedMode.next())
+                        ACTION_EXPORT_MONTHLY_CSV -> exportMonthlyCsv()
                     }
                 }
             })
@@ -560,6 +561,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
             )
             .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
+            .addCustomAction(
+                ACTION_EXPORT_MONTHLY_CSV,
+                getString(R.string.fuel_media_export_csv),
+                R.drawable.baseline_file_download_24
+            )
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
     }
@@ -592,6 +598,19 @@ class FuelEconomyMediaService : MediaBrowserService() {
         lastSampleNanos = System.nanoTime()
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_tank_filled)))
         publishPlaybackState()
+    }
+
+    private fun exportMonthlyCsv() {
+        persistTrip()
+        val result = MonthlyFuelCsvExporter.export(this)
+        val message = if (result != null) {
+            R.string.monthly_history_exported
+        } else if (MonthlyFuelCsvExporter.configuredDirectory(this) == null) {
+            R.string.monthly_history_location_required
+        } else {
+            R.string.monthly_history_export_failed
+        }
+        android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
     }
 
     private fun persistTrip() {
@@ -731,6 +750,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         const val ACTION_RESET_TRIP = "com.aatorque.stats.action.RESET_FUEL_TRIP"
         const val ACTION_NEXT_MODE = "com.aatorque.stats.action.NEXT_FUEL_MODE"
         const val ACTION_TANK_FILLED = "com.aatorque.stats.action.TANK_FILLED"
+        const val ACTION_EXPORT_MONTHLY_CSV = "com.aatorque.stats.action.EXPORT_MONTHLY_CSV"
         private const val MEDIA_ROOT_ID = "aa_torque_modes_root"
         private const val SAMPLE_INTERVAL_MS = 1_000L
         private const val NANOS_PER_SECOND = 1_000_000_000.0

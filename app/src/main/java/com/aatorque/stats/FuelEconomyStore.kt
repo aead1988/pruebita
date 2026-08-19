@@ -1,6 +1,8 @@
 package com.aatorque.stats
 
 import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -221,6 +223,48 @@ class MonthlyFuelEconomyHistoryStore(context: Context) {
         private const val KEY_DISTANCE_KM = "distance_km"
         private const val KEY_FUEL_LITERS = "fuel_liters"
         private const val KEY_FUEL_COST = "fuel_cost"
+    }
+}
+
+/** Saves monthly CSV reports into a folder selected once from the phone settings. */
+object MonthlyFuelCsvExporter {
+    private const val PREFS_NAME = "fuel_report_export"
+    private const val KEY_DIRECTORY_URI = "monthly_csv_directory_uri"
+
+    fun setDirectory(context: Context, uri: Uri) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_DIRECTORY_URI, uri.toString())
+            .apply()
+    }
+
+    fun configuredDirectory(context: Context): Uri? =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_DIRECTORY_URI, null)
+            ?.let(Uri::parse)
+
+    fun export(context: Context, now: Date = Date()): Uri? {
+        val treeUri = configuredDirectory(context) ?: return null
+        return try {
+            val parentUri = DocumentsContract.buildDocumentUriUsingTree(
+                treeUri,
+                DocumentsContract.getTreeDocumentId(treeUri)
+            )
+            val timestamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(now)
+            val fileUri = DocumentsContract.createDocument(
+                context.contentResolver,
+                parentUri,
+                "text/csv",
+                "aa-torque-consumo-$timestamp.csv"
+            ) ?: return null
+            val csv = MonthlyFuelEconomyStore(context).exportCsv()
+            val written = context.contentResolver.openOutputStream(fileUri, "w")
+                ?.bufferedWriter(Charsets.UTF_8)
+                ?.use { writer -> writer.write(csv) } != null
+            if (written) fileUri else null
+        } catch (_: Exception) {
+            null
+        }
     }
 }
 
