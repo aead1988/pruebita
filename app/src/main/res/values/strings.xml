@@ -236,6 +236,8 @@
     <string name="mode_weekly_summary">Monday-to-Sunday distance, average consumption, gallons and total cost</string>
     <string name="mode_since_refuel">Since refuel</string>
     <string name="mode_since_refuel_summary">Consumption, distance, average and cost since the last tank fill</string>
+    <string name="mode_annual">Annual analysis</string>
+    <string name="mode_annual_summary">Yearly distance, average consumption, gallons and total cost</string>
     <string name="mode_consumption_title_format">Average: %1$s km/gal</string>
     <string name="mode_consumption_subtitle_format">Instant: %1$s km/gal · %2$s km/h</string>
     <string name="mode_consumption_description_format">%1$s km · %2$s gal · %3$s</string>
@@ -261,6 +263,8 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <string name="mode_annual_title_format">Year %1$s · %2$s km</string>
+    <string name="mode_annual_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_since_refuel_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="fuel_price_per_gallon_title">Fuel price per gallon</string>
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>

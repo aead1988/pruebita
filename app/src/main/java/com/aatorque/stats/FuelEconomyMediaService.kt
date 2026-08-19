@@ -344,6 +344,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.WEEKLY -> weeklyText()
             DisplayMode.MONTHLY -> monthlyText()
             DisplayMode.SINCE_REFUEL -> sinceRefuelText(value)
+            DisplayMode.ANNUAL -> annualText()
         }
         val spotifyArtwork = spotifyArtwork()
         val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
@@ -523,6 +524,27 @@ class FuelEconomyMediaService : MediaBrowserService() {
         return resources.getQuantityString(R.plurals.mode_since_refuel_days, days, days)
     }
 
+    private fun annualText(): DisplayText {
+        val year = SimpleDateFormat("yyyy", Locale.US).format(Date())
+        val reports = monthlyStore.historyIncludingCurrent().filter { it.monthKey.startsWith("$year-") }
+        val annual = MonthlyFuelEconomySnapshot(
+            monthKey = year,
+            distanceKm = reports.sumOf { it.distanceKm },
+            fuelLiters = reports.sumOf { it.fuelLiters },
+            fuelCost = reports.sumOf { it.fuelCost }
+        )
+        return DisplayText(
+            getString(R.string.mode_annual_title_format, year, two(annual.distanceKm)),
+            getString(
+                R.string.mode_annual_subtitle_format,
+                one(annual.averageKmPerGallon),
+                two(annual.fuelGallons),
+                money(annual.fuelCost)
+            ),
+            snapshot.status
+        )
+    }
+
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
@@ -695,7 +717,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary),
         WEEKLY("mode_weekly", R.string.mode_weekly, R.string.mode_weekly_summary),
         MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary),
-        SINCE_REFUEL("mode_since_refuel", R.string.mode_since_refuel, R.string.mode_since_refuel_summary);
+        SINCE_REFUEL("mode_since_refuel", R.string.mode_since_refuel, R.string.mode_since_refuel_summary),
+        ANNUAL("mode_annual", R.string.mode_annual, R.string.mode_annual_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 
