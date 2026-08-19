@@ -593,8 +593,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val subtitleResource: Int
     ) {
         FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
-        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary),
-        DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary);
+        DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary),
+        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 
