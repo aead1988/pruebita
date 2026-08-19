@@ -130,6 +130,11 @@
             android:persistent="false"
             android:summary="@string/monthly_history_export_summary"
             android:title="@string/monthly_history_export_title" />
+        <Preference
+            android:key="restoreFuelBackup"
+            android:persistent="false"
+            android:summary="@string/fuel_backup_restore_summary"
+            android:title="@string/fuel_backup_restore_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

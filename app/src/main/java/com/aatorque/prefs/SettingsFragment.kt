@@ -43,6 +43,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var resetFuelTripPref: Preference
     lateinit var exportMonthlyHistoryPref: Preference
     lateinit var monthlyHistoryLocationPref: Preference
+    lateinit var restoreFuelBackupPref: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +62,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         resetFuelTripPref = findPreference("resetFuelTrip")!!
         exportMonthlyHistoryPref = findPreference("exportMonthlyHistoryCsv")!!
         monthlyHistoryLocationPref = findPreference("monthlyHistoryLocation")!!
+        restoreFuelBackupPref = findPreference("restoreFuelBackup")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         fontPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         backgroundPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -182,6 +184,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         monthlyHistoryLocationPref.setOnPreferenceClickListener {
             (requireActivity() as SettingsActivity).configureMonthlyFuelExportLocation()
+            true
+        }
+        restoreFuelBackupPref.setOnPreferenceClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.fuel_backup_restore_title)
+                .setMessage(R.string.fuel_backup_restore_confirm)
+                .setPositiveButton(R.string.fuel_backup_restore_action) { _, _ ->
+                    (requireActivity() as SettingsActivity).restoreFuelBackup()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
             true
         }
 

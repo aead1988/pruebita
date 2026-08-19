@@ -32,6 +32,7 @@ import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
+import com.aatorque.stats.FuelDriveArchive
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.MonthlyFuelCsvExporter
 import com.aatorque.stats.R
@@ -198,6 +199,10 @@ class SettingsActivity : AppCompatActivity(),
         monthlyExportDirectoryLauncher.launch(null)
     }
 
+    fun restoreFuelBackup() {
+        fuelBackupRestoreLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+    }
+
     private fun launchFragment(
         tag: String,
         fragment: Fragment
@@ -289,6 +294,21 @@ class SettingsActivity : AppCompatActivity(),
                 } catch (error: SecurityException) {
                     Timber.e(error, "Unable to persist monthly report directory permission")
                     Toast.makeText(this, R.string.monthly_history_location_failed, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+    private val fuelBackupRestoreLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch(Dispatchers.IO) {
+                val restored = FuelDriveArchive.restoreBackup(applicationContext, uri)
+                runOnUiThread {
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        if (restored) R.string.fuel_backup_restored else R.string.fuel_backup_restore_failed,
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }

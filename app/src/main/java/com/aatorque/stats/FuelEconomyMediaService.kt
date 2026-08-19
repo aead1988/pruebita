@@ -48,6 +48,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var tracking = true
     private var observedResetGeneration = 0L
     private var selectedMode = DisplayMode.FUEL_COST
+    private var journeyStartedAt = System.currentTimeMillis()
 
     override fun onCreate() {
         super.onCreate()
@@ -137,6 +138,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private val torqueConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             torqueService = ITorqueService.Stub.asInterface(binder)
+            journeyStartedAt = System.currentTimeMillis()
             journeySnapshot = FuelEconomySnapshot(
                 0.0,
                 0.0,
@@ -148,6 +150,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            persistTrip()
+            archiveCompletedJourney()
             torqueService = null
             torqueBound = false
             telemetryPids = emptyList()
@@ -602,15 +606,24 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun exportMonthlyCsv() {
         persistTrip()
-        val result = MonthlyFuelCsvExporter.export(this)
-        val message = if (result != null) {
-            R.string.monthly_history_exported
+        val journeyResult = FuelDriveArchive.exportJourney(this, journeySnapshot, journeyStartedAt, automatic = false)
+        val backup = if (journeyResult == null) FuelDriveArchive.exportCurrentBackup(this) else null
+        val csv = if (journeyResult == null) MonthlyFuelCsvExporter.export(this) else null
+        val message = if (journeyResult?.success == true || backup != null || csv != null) {
+            R.string.fuel_archive_exported
         } else if (MonthlyFuelCsvExporter.configuredDirectory(this) == null) {
             R.string.monthly_history_location_required
         } else {
-            R.string.monthly_history_export_failed
+            R.string.fuel_archive_export_failed
         }
         android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
+    }
+
+    private fun archiveCompletedJourney() {
+        val result = FuelDriveArchive.exportJourney(this, journeySnapshot, journeyStartedAt, automatic = true)
+        if (result?.success == true) {
+            Timber.i("Archived journey with %d files and award %s", result.writtenFiles, result.awardTitle)
+        }
     }
 
     private fun persistTrip() {
@@ -632,6 +645,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     override fun onDestroy() {
         persistTrip()
+        archiveCompletedJourney()
         stopRefreshTask()
         executor.shutdownNow()
         if (torqueBound) {

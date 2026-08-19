@@ -68,6 +68,16 @@ class FuelEconomyStore(context: Context) {
             .apply()
     }
 
+    fun restore(snapshot: FuelEconomySnapshot, tankStartedAt: Long) {
+        preferences.edit()
+            .putString(KEY_DISTANCE_KM, snapshot.distanceKm.coerceAtLeast(0.0).toString())
+            .putString(KEY_FUEL_LITERS, snapshot.fuelLiters.coerceAtLeast(0.0).toString())
+            .putString(KEY_ELAPSED_SECONDS, snapshot.elapsedSeconds.coerceAtLeast(0.0).toString())
+            .putLong(KEY_LAST_TANK_FILL_TIMESTAMP, tankStartedAt.coerceAtMost(System.currentTimeMillis()))
+            .putLong(KEY_RESET_GENERATION, resetGeneration() + 1)
+            .apply()
+    }
+
     fun resetGeneration(): Long = preferences.getLong(KEY_RESET_GENERATION, 0L)
 
     fun tankPeriodStartTimestamp(now: Long = System.currentTimeMillis()): Long {
@@ -161,6 +171,14 @@ class MonthlyFuelEconomyStore(context: Context) {
         }
     }
 
+    @Synchronized
+    fun restore(values: List<MonthlyFuelEconomySnapshot>) {
+        val currentKey = currentMonthKey()
+        val current = values.firstOrNull { it.monthKey == currentKey } ?: MonthlyFuelEconomySnapshot(currentKey)
+        historyStore.replace(values.filter { it.monthKey != currentKey })
+        write(current)
+    }
+
     private fun csvNumber(value: Double): String = String.format(Locale.US, "%.2f", value)
 
     private fun write(snapshot: MonthlyFuelEconomySnapshot) {
@@ -211,6 +229,12 @@ class MonthlyFuelEconomyHistoryStore(context: Context) {
                 )
             }
             .sortedBy { it.monthKey }
+
+    @Synchronized
+    fun replace(values: List<MonthlyFuelEconomySnapshot>) {
+        preferences.edit().clear().commit()
+        values.forEach(::save)
+    }
 
     private fun value(month: String, field: String): Double =
         preferences.getString(key(month, field), "0")?.toDoubleOrNull() ?: 0.0

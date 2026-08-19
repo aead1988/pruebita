@@ -234,7 +234,7 @@
     <string name="fuel_media_next_mode">Siguiente modo</string>
     <string name="fuel_media_no_song">Sin canción en reproducción</string>
     <string name="fuel_media_tank_filled">Tanque lleno</string>
-    <string name="fuel_media_export_csv">Guardar informe CSV</string>
+    <string name="fuel_media_export_csv">Guardar informes</string>
     <string name="mode_consumption">Consumo</string>
     <string name="mode_consumption_summary">Promedio, instantáneo, distancia y galones</string>
     <string name="mode_engine">Motor</string>
@@ -287,15 +287,23 @@
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
     <string name="fuel_tank_gallons_title">Capacidad del tanque en galones</string>
     <string name="fuel_tank_gallons_summary">Se usa para estimar la autonomía restante</string>
-    <string name="monthly_history_category">Informes de consumo</string>
+    <string name="monthly_history_category">Informes, premios y respaldo</string>
     <string name="monthly_history_export_title">Exportar historial mensual CSV</string>
     <string name="monthly_history_export_summary">Guarda los meses archivados y el mes actual para analizarlos en Excel o Google Sheets</string>
     <string name="monthly_history_exported">Historial mensual exportado</string>
     <string name="monthly_history_export_failed">No se pudo exportar el historial mensual</string>
-    <string name="monthly_history_location_title">Configurar carpeta para informes CSV</string>
+    <string name="monthly_history_location_title">Configurar carpeta de Google Drive o almacenamiento</string>
     <string name="monthly_history_location_not_configured">No se ha seleccionado una carpeta</string>
-    <string name="monthly_history_location_configured">Carpeta configurada para guardado automático</string>
-    <string name="monthly_history_location_saved">Carpeta de informes guardada</string>
+    <string name="monthly_history_location_configured">Carpeta configurada para resultados, premios y respaldos automáticos</string>
+    <string name="monthly_history_location_saved">Carpeta de informes y premios guardada</string>
     <string name="monthly_history_location_failed">No se pudo guardar el permiso de la carpeta</string>
     <string name="monthly_history_location_required">Configura primero la carpeta de informes en AA Torque</string>
+    <string name="fuel_archive_exported">Resultados, premio y respaldo guardados</string>
+    <string name="fuel_archive_export_failed">No se pudieron guardar los resultados y el respaldo</string>
+    <string name="fuel_backup_restore_title">Restaurar respaldo de AA Torque</string>
+    <string name="fuel_backup_restore_summary">Recupera consumo desde tanqueada, historial mensual, viajes y premios desde un archivo JSON</string>
+    <string name="fuel_backup_restore_confirm">Los datos del respaldo reemplazarán el historial actual de consumo. Selecciona únicamente un respaldo creado por AA Torque.</string>
+    <string name="fuel_backup_restore_action">Seleccionar respaldo</string>
+    <string name="fuel_backup_restored">Respaldo restaurado correctamente</string>
+    <string name="fuel_backup_restore_failed">El archivo no es un respaldo válido de AA Torque</string>
 </resources>
