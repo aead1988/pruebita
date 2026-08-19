@@ -31,6 +31,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private lateinit var store: FuelEconomyStore
     private lateinit var monthlyStore: MonthlyFuelEconomyStore
     private lateinit var dailyStore: DailyFuelEconomyStore
+    private lateinit var weeklyStore: WeeklyFuelEconomyStore
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private var refreshTask: ScheduledFuture<*>? = null
     private var torqueService: ITorqueService? = null
@@ -38,6 +39,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var snapshot = FuelEconomySnapshot(0.0, 0.0)
     private var monthlySnapshot = MonthlyFuelEconomySnapshot("")
     private var dailySnapshot = DailyFuelEconomySnapshot("")
+    private var weeklySnapshot = WeeklyFuelEconomySnapshot("")
     private var telemetry = VehicleTelemetry()
     private var telemetryPids = emptyList<TelemetryPid>()
     private var lastSampleNanos = 0L
@@ -51,9 +53,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
         store = FuelEconomyStore(this)
         monthlyStore = MonthlyFuelEconomyStore(this)
         dailyStore = DailyFuelEconomyStore(this)
+        weeklyStore = WeeklyFuelEconomyStore(this)
         snapshot = store.load()
         monthlySnapshot = monthlyStore.loadCurrent()
         dailySnapshot = dailyStore.loadCurrent()
+        weeklySnapshot = weeklyStore.loadCurrent()
         observedResetGeneration = store.resetGeneration()
         selectedMode = loadMode()
         mediaSession = MediaSession(this, "AA Torque selectable telemetry").apply {
@@ -89,6 +93,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 override fun onCustomAction(action: String, extras: Bundle?) {
                     when (action) {
                         ACTION_RESET_TRIP -> resetTrip()
+                        ACTION_TANK_FILLED -> tankFilled()
                         ACTION_NEXT_MODE -> selectMode(selectedMode.next())
                     }
                 }
@@ -273,6 +278,15 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     fuelCost = dailySnapshot.fuelCost +
                         fuelLitersDelta / FuelEconomySnapshot.US_GALLON_LITERS * price
                 )
+                if (weeklySnapshot.weekKey != weeklyStore.currentWeekKey()) {
+                    weeklySnapshot = weeklyStore.loadCurrent()
+                }
+                weeklySnapshot = weeklySnapshot.copy(
+                    distanceKm = weeklySnapshot.distanceKm + distanceDelta,
+                    fuelLiters = weeklySnapshot.fuelLiters + fuelLitersDelta,
+                    fuelCost = weeklySnapshot.fuelCost +
+                        fuelLitersDelta / FuelEconomySnapshot.US_GALLON_LITERS * price
+                )
             }
             val instant = if (telemetry.fuelLitersPerHour > 0.01 && telemetry.speedKph > 0.1) {
                 telemetry.speedKph / telemetry.fuelLitersPerHour * FuelEconomySnapshot.US_GALLON_LITERS
@@ -297,6 +311,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.FUEL_COST -> fuelCostText(value)
             DisplayMode.MONTHLY -> monthlyText()
             DisplayMode.DAILY -> dailyText()
+            DisplayMode.WEEKLY -> weeklyText()
         }
         val spotifyArtwork = spotifyArtwork()
         val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
@@ -437,6 +452,21 @@ class FuelEconomyMediaService : MediaBrowserService() {
         )
     }
 
+    private fun weeklyText(): DisplayText = DisplayText(
+        getString(
+            R.string.mode_weekly_title_format,
+            weeklyStore.currentWeekNumber(),
+            two(weeklySnapshot.distanceKm)
+        ),
+        getString(
+            R.string.mode_weekly_subtitle_format,
+            one(weeklySnapshot.averageKmPerGallon),
+            two(weeklySnapshot.fuelGallons),
+            money(weeklySnapshot.fuelCost)
+        ),
+        snapshot.status
+    )
+
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
@@ -450,6 +480,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
                 if (tracking) 1f else 0f
             )
+            .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
@@ -475,6 +506,15 @@ class FuelEconomyMediaService : MediaBrowserService() {
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_trip_reset)))
     }
 
+    private fun tankFilled() {
+        store.markTankFilled()
+        observedResetGeneration = store.resetGeneration()
+        snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
+        lastSampleNanos = System.nanoTime()
+        publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_tank_filled)))
+        publishPlaybackState()
+    }
+
     private fun persistTrip() {
         val currentResetGeneration = store.resetGeneration()
         if (currentResetGeneration != observedResetGeneration) {
@@ -484,6 +524,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         store.save(snapshot.distanceKm, snapshot.fuelLiters, snapshot.elapsedSeconds)
         monthlySnapshot = monthlyStore.save(monthlySnapshot)
         dailySnapshot = dailyStore.save(dailySnapshot)
+        weeklySnapshot = weeklyStore.save(weeklySnapshot)
     }
 
     private fun stopRefreshTask() {
@@ -595,6 +636,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     ) {
         FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
         DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary),
+        WEEKLY("mode_weekly", R.string.mode_weekly, R.string.mode_weekly_summary),
         MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
@@ -607,6 +649,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     companion object {
         const val ACTION_RESET_TRIP = "com.aatorque.stats.action.RESET_FUEL_TRIP"
         const val ACTION_NEXT_MODE = "com.aatorque.stats.action.NEXT_FUEL_MODE"
+        const val ACTION_TANK_FILLED = "com.aatorque.stats.action.TANK_FILLED"
         private const val MEDIA_ROOT_ID = "aa_torque_modes_root"
         private const val SAMPLE_INTERVAL_MS = 1_000L
         private const val NANOS_PER_SECOND = 1_000_000_000.0

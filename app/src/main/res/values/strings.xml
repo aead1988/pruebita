@@ -217,6 +217,7 @@
     <string name="fuel_media_reset_current">Current: %1$s km · %2$s gal · %3$s km/gal. Tap to reset.</string>
     <string name="fuel_media_next_mode">Next mode</string>
     <string name="fuel_media_no_song">No song playing</string>
+    <string name="fuel_media_tank_filled">Tank filled</string>
     <string name="mode_consumption">Consumption</string>
     <string name="mode_consumption_summary">Average, instant, distance and gallons</string>
     <string name="mode_engine">Engine</string>
@@ -231,6 +232,8 @@
     <string name="mode_monthly_summary">Monthly distance, average consumption, gallons and total cost</string>
     <string name="mode_daily">Daily analysis</string>
     <string name="mode_daily_summary">Daily distance, average consumption, gallons and total cost</string>
+    <string name="mode_weekly">Weekly analysis</string>
+    <string name="mode_weekly_summary">Monday-to-Sunday distance, average consumption, gallons and total cost</string>
     <string name="mode_consumption_title_format">Average: %1$s km/gal</string>
     <string name="mode_consumption_subtitle_format">Instant: %1$s km/gal · %2$s km/h</string>
     <string name="mode_consumption_description_format">%1$s km · %2$s gal · %3$s</string>
@@ -249,6 +252,8 @@
     <string name="mode_monthly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_daily_title_format">%1$s · %2$s km</string>
     <string name="mode_daily_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
+    <string name="mode_weekly_title_format">Week %1$d · %2$s km</string>
+    <string name="mode_weekly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="fuel_price_per_gallon_title">Fuel price per gallon</string>
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>
