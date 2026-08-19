@@ -487,7 +487,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private fun weeklyText(): DisplayText = DisplayText(
         getString(
             R.string.mode_weekly_title_format,
-            weeklyStore.currentWeekNumber(),
             two(weeklySnapshot.distanceKm)
         ),
         getString(
@@ -500,7 +499,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
     )
 
     private fun sinceRefuelText(value: FuelEconomySnapshot): DisplayText = DisplayText(
-        getString(R.string.mode_since_refuel_title_format, two(value.distanceKm)),
+        getString(
+            R.string.mode_since_refuel_title_format,
+            tankPeriodDaysText(),
+            two(value.distanceKm)
+        ),
         getString(
             R.string.mode_since_refuel_subtitle_format,
             one(value.averageKmPerGallon),
@@ -509,6 +512,16 @@ class FuelEconomyMediaService : MediaBrowserService() {
         ),
         value.status
     )
+
+    private fun tankPeriodDays(now: Long = System.currentTimeMillis()): Long {
+        val elapsed = (now - store.tankPeriodStartTimestamp(now)).coerceAtLeast(0L)
+        return elapsed / MILLIS_PER_DAY + 1L
+    }
+
+    private fun tankPeriodDaysText(): String {
+        val days = tankPeriodDays().coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        return resources.getQuantityString(R.plurals.mode_since_refuel_days, days, days)
+    }
 
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
@@ -700,6 +713,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val NANOS_PER_SECOND = 1_000_000_000.0
         private const val MAX_SAMPLE_GAP_NANOS = 5_000_000_000L
         private const val PERSIST_INTERVAL_NANOS = 10_000_000_000L
+        private const val MILLIS_PER_DAY = 86_400_000L
         private const val MODE_PREFS = "fuel_display_mode"
         private const val MODE_KEY = "selected_mode"
         private const val PREF_FUEL_PRICE = "fuelPricePerGallon"

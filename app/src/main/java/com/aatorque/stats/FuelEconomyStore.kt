@@ -46,10 +46,12 @@ class FuelEconomyStore(context: Context) {
     }
 
     fun reset() {
+        val timestamp = System.currentTimeMillis()
         preferences.edit()
             .putString(KEY_DISTANCE_KM, "0")
             .putString(KEY_FUEL_LITERS, "0")
             .putString(KEY_ELAPSED_SECONDS, "0")
+            .putLong(KEY_LAST_TANK_FILL_TIMESTAMP, timestamp)
             .putLong(KEY_RESET_GENERATION, resetGeneration() + 1)
             .apply()
     }
@@ -65,6 +67,13 @@ class FuelEconomyStore(context: Context) {
     }
 
     fun resetGeneration(): Long = preferences.getLong(KEY_RESET_GENERATION, 0L)
+
+    fun tankPeriodStartTimestamp(now: Long = System.currentTimeMillis()): Long {
+        val stored = preferences.getLong(KEY_LAST_TANK_FILL_TIMESTAMP, 0L)
+        if (stored > 0L) return stored
+        preferences.edit().putLong(KEY_LAST_TANK_FILL_TIMESTAMP, now).apply()
+        return now
+    }
 
     companion object {
         const val PREFS_NAME = "fuel_economy_trip"

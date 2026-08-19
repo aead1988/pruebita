@@ -270,9 +270,13 @@
     <string name="mode_monthly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="mode_daily_title_format">%1$s · %2$s km</string>
     <string name="mode_daily_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
-    <string name="mode_weekly_title_format">Semana %1$d · %2$s km</string>
+    <string name="mode_weekly_title_format">Semana · %1$s km</string>
     <string name="mode_weekly_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
-    <string name="mode_since_refuel_title_format">Desde tanqueada · %1$s km</string>
+    <string name="mode_since_refuel_title_format">Desde tanqueada · %1$s · %2$s km</string>
+    <plurals name="mode_since_refuel_days">
+        <item quantity="one">%1$d día</item>
+        <item quantity="other">%1$d días</item>
+    </plurals>
     <string name="mode_since_refuel_subtitle_format">%1$s km/gal · %2$s gal · %3$s</string>
     <string name="fuel_price_per_gallon_title">Precio del combustible por galón</string>
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
