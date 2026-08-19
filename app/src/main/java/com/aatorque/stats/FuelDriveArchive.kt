@@ -163,11 +163,12 @@ object FuelDriveArchive {
         }
     }
 
-    fun restoreBackup(context: Context, uri: Uri): Boolean = try {
-        val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-            ?: return false
-        val root = JSONObject(raw)
-        if (root.optInt("schemaVersion") !in 1..SCHEMA_VERSION) return false
+    fun restoreBackup(context: Context, uri: Uri): Boolean {
+        return try {
+            val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                ?: return false
+            val root = JSONObject(raw)
+            if (root.optInt("schemaVersion") !in 1..SCHEMA_VERSION) return false
 
         root.optJSONObject("sinceRefuel")?.let { value ->
             FuelEconomyStore(context).restore(
@@ -198,10 +199,11 @@ object FuelDriveArchive {
                 for (index in 0 until array.length()) add(ArchivedTrip.fromJson(array.getJSONObject(index)))
             })
         }
-        true
-    } catch (error: Exception) {
-        Timber.e(error, "Unable to restore AA Torque backup")
-        false
+            true
+        } catch (error: Exception) {
+            Timber.e(error, "Unable to restore AA Torque backup")
+            false
+        }
     }
 
     private fun backupJson(context: Context): String {
