@@ -492,7 +492,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
                 if (tracking) 1f else 0f
             )
-            .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
