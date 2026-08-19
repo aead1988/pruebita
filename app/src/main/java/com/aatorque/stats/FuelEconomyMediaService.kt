@@ -110,7 +110,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
             result.sendResult(mutableListOf())
             return
         }
-        val artwork = spotifyArtwork()?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean(PREF_SPOTIFY_ARTWORK, false)
+        val artwork = (if (useSpotifyArtwork) spotifyArtwork()?.bitmap else null)
+            ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         val items = DisplayMode.entries.map { mode ->
             val description = MediaDescription.Builder()
                 .setMediaId(mode.mediaId)
@@ -296,19 +299,20 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.DAILY -> dailyText()
         }
         val spotifyArtwork = spotifyArtwork()
-        val artwork = spotifyArtwork?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean(PREF_SPOTIFY_ARTWORK, false)
+        val artwork = (if (useSpotifyArtwork) spotifyArtwork?.bitmap else null)
+            ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         val mediaId = selectedMode.mediaId + ":" + (spotifyArtwork?.key ?: "default")
-        val thirdLine = spotifyArtwork?.nowPlayingLine() ?: text.description
+        val vehicleLine = listOf(text.title, text.subtitle).joinToString(" · ")
+        val musicLine = spotifyArtwork?.nowPlayingLine() ?: getString(R.string.fuel_media_no_song)
         mediaSession.setMetadata(
             MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, mediaId)
-                .putString(MediaMetadata.METADATA_KEY_TITLE, text.title)
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, text.title)
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, text.subtitle)
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, text.subtitle)
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, thirdLine)
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION, thirdLine)
-                .putString(MediaMetadata.METADATA_KEY_GENRE, getString(selectedMode.titleResource))
+                .putString(MediaMetadata.METADATA_KEY_TITLE, vehicleLine)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, vehicleLine)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, musicLine)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, musicLine)
                 .putBitmap(MediaMetadata.METADATA_KEY_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, artwork)
@@ -317,9 +321,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun spotifyArtwork(): SpotifyMediaArtwork? {
-        val enabled = PreferenceManager.getDefaultSharedPreferences(this)
-            .getBoolean(PREF_SPOTIFY_ARTWORK, false)
-        if (!enabled) return null
         if (!NotiService.isNotificationAccessEnabled(this)) return null
         return try {
             val manager = getSystemService(MediaSessionManager::class.java)
@@ -550,7 +551,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             val cleanTitle = title?.trim()?.takeIf { it.isNotEmpty() }
             val cleanArtist = artist?.trim()?.takeIf { it.isNotEmpty() }
             return when {
-                cleanArtist != null && cleanTitle != null -> "$cleanArtist — $cleanTitle"
+                cleanArtist != null && cleanTitle != null -> "$cleanTitle — $cleanArtist"
                 cleanTitle != null -> cleanTitle
                 cleanArtist != null -> cleanArtist
                 else -> null

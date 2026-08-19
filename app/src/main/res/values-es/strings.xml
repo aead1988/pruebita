@@ -232,6 +232,7 @@
     <string name="fuel_media_reset_confirm">La distancia y el combustible consumido volverán a cero. Esta acción no se puede deshacer.</string>
     <string name="fuel_media_reset_current">Actual: %1$s km · %2$s gal · %3$s km/gal. Toca para reiniciar.</string>
     <string name="fuel_media_next_mode">Siguiente modo</string>
+    <string name="fuel_media_no_song">Sin canción en reproducción</string>
     <string name="mode_consumption">Consumo</string>
     <string name="mode_consumption_summary">Promedio, instantáneo, distancia y galones</string>
     <string name="mode_engine">Motor</string>

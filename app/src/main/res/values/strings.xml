@@ -216,6 +216,7 @@
     <string name="fuel_media_reset_confirm">Distance and consumed fuel will return to zero. This cannot be undone.</string>
     <string name="fuel_media_reset_current">Current: %1$s km · %2$s gal · %3$s km/gal. Tap to reset.</string>
     <string name="fuel_media_next_mode">Next mode</string>
+    <string name="fuel_media_no_song">No song playing</string>
     <string name="mode_consumption">Consumption</string>
     <string name="mode_consumption_summary">Average, instant, distance and gallons</string>
     <string name="mode_engine">Engine</string>
