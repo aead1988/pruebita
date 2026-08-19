@@ -27,6 +27,8 @@ class NotiService : NotificationListenerService() {
         if (sbn?.packageName == SPOTIFY_PACKAGE && sbn.key == cachedNotificationKey) {
             cachedSpotifyArtwork = null
             cachedSpotifyArtworkKey = null
+            cachedSpotifyTitle = null
+            cachedSpotifyArtist = null
             cachedNotificationKey = null
         }
     }
@@ -34,8 +36,11 @@ class NotiService : NotificationListenerService() {
     private fun captureSpotifyArtwork(sbn: StatusBarNotification) {
         val artwork = notificationArtwork(sbn.notification) ?: return
         val title = sbn.notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
+        val artist = sbn.notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
         cachedSpotifyArtwork = artwork
         cachedSpotifyArtworkKey = "$title:${artwork.generationId}"
+        cachedSpotifyTitle = title
+        cachedSpotifyArtist = artist
         cachedNotificationKey = sbn.key
     }
 
@@ -72,9 +77,16 @@ class NotiService : NotificationListenerService() {
         private const val SPOTIFY_PACKAGE = "com.spotify.music"
         @Volatile private var cachedSpotifyArtwork: Bitmap? = null
         @Volatile private var cachedSpotifyArtworkKey: String? = null
+        @Volatile private var cachedSpotifyTitle: String? = null
+        @Volatile private var cachedSpotifyArtist: String? = null
         @Volatile private var cachedNotificationKey: String? = null
 
-        data class SpotifyArtwork(val bitmap: Bitmap, val key: String)
+        data class SpotifyArtwork(
+            val bitmap: Bitmap,
+            val key: String,
+            val title: String?,
+            val artist: String?
+        )
 
         fun isNotificationAccessEnabled(context: Context): Boolean {
             return NotificationManagerCompat.getEnabledListenerPackages(context)
@@ -84,7 +96,7 @@ class NotiService : NotificationListenerService() {
         fun currentSpotifyArtwork(): SpotifyArtwork? {
             val bitmap = cachedSpotifyArtwork ?: return null
             val key = cachedSpotifyArtworkKey ?: bitmap.generationId.toString()
-            return SpotifyArtwork(bitmap, key)
+            return SpotifyArtwork(bitmap, key, cachedSpotifyTitle, cachedSpotifyArtist)
         }
     }
 }

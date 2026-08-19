@@ -1,4 +1,4 @@
-# AA Torque 2.0.37 — modos multimedia y portada de Spotify
+# AA Torque 2.0.38 — modos multimedia y portada de Spotify
 
 Esta variante se basa en AA Torque 2.0.30 y muestra datos de Torque Pro como una fuente
 multimedia de Android Auto. La vista de mapas experimental fue retirada.
@@ -27,6 +27,10 @@ La portada se obtiene primero de la sesión multimedia de Spotify y, como respal
 de su notificación. El identificador multimedia cambia con cada canción para evitar que algunas
 radios conserven en caché la carátula anterior. El módulo de combustible muestra únicamente los
 valores y unidades, sin las etiquetas «Flujo», «Usados» ni «Costo».
+
+El artista y el nombre de la canción se envían como tercer campo multimedia con el formato
+**Artista — Canción**, sin sustituir las dos líneas de telemetría. La visibilidad de esta tercera
+línea depende del diseño aplicado por cada radio o host de Android Auto.
 
 El botón de siguiente pista también cambia al modo siguiente. Android Auto controla qué campos
 y botones son visibles según la pantalla y el vehículo.

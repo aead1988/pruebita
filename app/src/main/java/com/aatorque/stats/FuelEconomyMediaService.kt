@@ -269,6 +269,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val spotifyArtwork = spotifyArtwork()
         val artwork = spotifyArtwork?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
         val mediaId = selectedMode.mediaId + ":" + (spotifyArtwork?.key ?: "default")
+        val thirdLine = spotifyArtwork?.nowPlayingLine() ?: text.description
         mediaSession.setMetadata(
             MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, mediaId)
@@ -276,8 +277,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, text.title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, text.subtitle)
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, text.subtitle)
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, text.description)
-                .putString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION, text.description)
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, thirdLine)
+                .putString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION, thirdLine)
                 .putString(MediaMetadata.METADATA_KEY_GENRE, getString(selectedMode.titleResource))
                 .putBitmap(MediaMetadata.METADATA_KEY_ART, artwork)
                 .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
@@ -301,15 +302,17 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                 ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
             if (artwork != null) {
+                val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+                val artist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
                 val key = listOf(
                     metadata?.getString(MediaMetadata.METADATA_KEY_MEDIA_ID),
-                    metadata?.getString(MediaMetadata.METADATA_KEY_TITLE),
+                    title,
                     metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM)
                 ).joinToString(":") + ":" + artwork.generationId
-                SpotifyMediaArtwork(fitArtworkForMediaSession(artwork), key)
+                SpotifyMediaArtwork(fitArtworkForMediaSession(artwork), key, title, artist)
             } else {
                 NotiService.currentSpotifyArtwork()?.let {
-                    SpotifyMediaArtwork(fitArtworkForMediaSession(it.bitmap), it.key)
+                    SpotifyMediaArtwork(fitArtworkForMediaSession(it.bitmap), it.key, it.title, it.artist)
                 }
             }
         } catch (error: SecurityException) {
@@ -475,7 +478,23 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private data class DisplayText(val title: String, val subtitle: String, val description: String)
-    private data class SpotifyMediaArtwork(val bitmap: Bitmap, val key: String)
+    private data class SpotifyMediaArtwork(
+        val bitmap: Bitmap,
+        val key: String,
+        val title: String?,
+        val artist: String?
+    ) {
+        fun nowPlayingLine(): String? {
+            val cleanTitle = title?.trim()?.takeIf { it.isNotEmpty() }
+            val cleanArtist = artist?.trim()?.takeIf { it.isNotEmpty() }
+            return when {
+                cleanArtist != null && cleanTitle != null -> "$cleanArtist — $cleanTitle"
+                cleanTitle != null -> cleanTitle
+                cleanArtist != null -> cleanArtist
+                else -> null
+            }
+        }
+    }
     private data class PidCandidate(val pid: String, val name: String, val unit: String)
     private data class TelemetryPid(
         val metric: Metric,
