@@ -282,4 +282,9 @@
     <string name="fuel_price_per_gallon_summary">Se usa para estimar el costo del viaje</string>
     <string name="fuel_tank_gallons_title">Capacidad del tanque en galones</string>
     <string name="fuel_tank_gallons_summary">Se usa para estimar la autonomía restante</string>
+    <string name="monthly_history_category">Informes de consumo</string>
+    <string name="monthly_history_export_title">Exportar historial mensual CSV</string>
+    <string name="monthly_history_export_summary">Guarda los meses archivados y el mes actual para analizarlos en Excel o Google Sheets</string>
+    <string name="monthly_history_exported">Historial mensual exportado</string>
+    <string name="monthly_history_export_failed">No se pudo exportar el historial mensual</string>
 </resources>

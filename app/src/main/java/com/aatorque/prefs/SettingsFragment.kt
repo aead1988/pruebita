@@ -40,6 +40,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var darkenArtPref: SeekBarPreference
     lateinit var blurArtPref: SeekBarPreference
     lateinit var resetFuelTripPref: Preference
+    lateinit var exportMonthlyHistoryPref: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +57,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         blurArtPref = findPreference("blurArtwork")!!
         darkenArtPref = findPreference("darkenArtwork")!!
         resetFuelTripPref = findPreference("resetFuelTrip")!!
+        exportMonthlyHistoryPref = findPreference("exportMonthlyHistoryCsv")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         fontPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         backgroundPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -169,6 +171,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
+            true
+        }
+        exportMonthlyHistoryPref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).exportMonthlyFuelHistory()
             true
         }
 

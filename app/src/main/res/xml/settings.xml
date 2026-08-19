@@ -119,6 +119,14 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/monthly_history_category">
+        <Preference
+            android:key="exportMonthlyHistoryCsv"
+            android:persistent="false"
+            android:summary="@string/monthly_history_export_summary"
+            android:title="@string/monthly_history_export_title" />
+    </PreferenceCategory>
+
     <PreferenceCategory
         android:singleLineTitle="false"
         android:title="@string/dashboards"

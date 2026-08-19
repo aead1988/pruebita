@@ -266,4 +266,9 @@
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>
     <string name="fuel_tank_gallons_summary">Used to estimate the remaining range</string>
+    <string name="monthly_history_category">Fuel reports</string>
+    <string name="monthly_history_export_title">Export monthly history CSV</string>
+    <string name="monthly_history_export_summary">Saves archived months and the current month for analysis in Excel or Google Sheets</string>
+    <string name="monthly_history_exported">Monthly history exported</string>
+    <string name="monthly_history_export_failed">Unable to export monthly history</string>
 </resources>

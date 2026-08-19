@@ -287,7 +287,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     elapsedSeconds = journeySnapshot.elapsedSeconds + elapsedSeconds
                 )
                 if (monthlySnapshot.monthKey != monthlyStore.currentMonthKey()) {
-                    monthlySnapshot = monthlyStore.loadCurrent()
+                    monthlySnapshot = monthlyStore.save(monthlySnapshot)
                 }
                 monthlySnapshot = monthlySnapshot.copy(
                     distanceKm = monthlySnapshot.distanceKm + distanceDelta,

@@ -31,11 +31,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.49-refuel-days.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.50-monthly-csv.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.49-refuel-days
-          path: app/build/outputs/apk/release/AA-Torque-2.0.49-refuel-days.apk
+          name: AA-Torque-2.0.50-monthly-csv
+          path: app/build/outputs/apk/release/AA-Torque-2.0.50-monthly-csv.apk
           if-no-files-found: error

@@ -31,6 +31,7 @@ import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
+import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.R
 import com.google.android.material.snackbar.Snackbar
 import com.google.protobuf.InvalidProtocolBufferException
@@ -187,6 +188,10 @@ class SettingsActivity : AppCompatActivity(),
         exportFileLauncher.launch("")
     }
 
+    fun exportMonthlyFuelHistory() {
+        monthlyFuelCsvLauncher.launch("aa-torque-monthly-fuel-history.csv")
+    }
+
     private fun launchFragment(
         tag: String,
         fragment: Fragment
@@ -242,6 +247,29 @@ class SettingsActivity : AppCompatActivity(),
         }
     }
 
+    private val monthlyFuelCsvLauncher = registerForActivityResult(MonthlyCsvExportContract()) { uri: Uri? ->
+        lifecycleScope.launch(Dispatchers.IO) {
+            val exported = if (uri != null) {
+                try {
+                    val csv = MonthlyFuelEconomyStore(applicationContext).exportCsv()
+                    contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { writer ->
+                        writer.write(csv)
+                    } != null
+                } catch (error: IOException) {
+                    Timber.e(error, "Unable to export monthly fuel history")
+                    false
+                }
+            } else false
+            runOnUiThread {
+                Toast.makeText(
+                    baseContext,
+                    if (exported) R.string.monthly_history_exported else R.string.monthly_history_export_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
     class ExportFileContract : ActivityResultContract<String, Uri?>() {
 
         override fun createIntent(context: Context, input: String): Intent {
@@ -279,6 +307,18 @@ class SettingsActivity : AppCompatActivity(),
                 null
             }
         }
+    }
+
+    class MonthlyCsvExportContract : ActivityResultContract<String, Uri?>() {
+        override fun createIntent(context: Context, input: String): Intent =
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "text/csv"
+                putExtra(Intent.EXTRA_TITLE, input)
+            }
+
+        override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
+            if (resultCode == Activity.RESULT_OK) intent?.data else null
     }
 
     override fun onNewIntent(intent: Intent) {

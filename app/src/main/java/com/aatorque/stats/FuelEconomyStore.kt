@@ -103,6 +103,7 @@ data class MonthlyFuelEconomySnapshot(
 /** Stores the current calendar month's totals independently from the resettable trip. */
 class MonthlyFuelEconomyStore(context: Context) {
     private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val historyStore = MonthlyFuelEconomyHistoryStore(context)
 
     fun currentMonthKey(now: Date = Date()): String =
         SimpleDateFormat(MONTH_KEY_PATTERN, Locale.US).format(now)
@@ -110,24 +111,55 @@ class MonthlyFuelEconomyStore(context: Context) {
     @Synchronized
     fun loadCurrent(): MonthlyFuelEconomySnapshot {
         val currentMonth = currentMonthKey()
-        if (preferences.getString(KEY_MONTH, null) != currentMonth) {
+        val storedMonth = preferences.getString(KEY_MONTH, null)
+        if (storedMonth != currentMonth) {
+            if (!storedMonth.isNullOrBlank()) historyStore.save(read(storedMonth))
             return MonthlyFuelEconomySnapshot(currentMonth).also(::write)
         }
-        return MonthlyFuelEconomySnapshot(
-            monthKey = currentMonth,
+        return read(currentMonth)
+    }
+
+    private fun read(monthKey: String): MonthlyFuelEconomySnapshot = MonthlyFuelEconomySnapshot(
+            monthKey = monthKey,
             distanceKm = preferences.getString(KEY_DISTANCE_KM, "0")?.toDoubleOrNull() ?: 0.0,
             fuelLiters = preferences.getString(KEY_FUEL_LITERS, "0")?.toDoubleOrNull() ?: 0.0,
             fuelCost = preferences.getString(KEY_FUEL_COST, "0")?.toDoubleOrNull() ?: 0.0
         )
-    }
 
     @Synchronized
     fun save(snapshot: MonthlyFuelEconomySnapshot): MonthlyFuelEconomySnapshot {
         val currentMonth = currentMonthKey()
-        val value = if (snapshot.monthKey == currentMonth) snapshot else MonthlyFuelEconomySnapshot(currentMonth)
+        val value = if (snapshot.monthKey == currentMonth) {
+            snapshot
+        } else {
+            if (snapshot.monthKey.isNotBlank()) historyStore.save(snapshot)
+            MonthlyFuelEconomySnapshot(currentMonth)
+        }
         write(value)
         return value
     }
+
+    @Synchronized
+    fun historyIncludingCurrent(): List<MonthlyFuelEconomySnapshot> {
+        val reports = historyStore.loadAll().associateBy { it.monthKey }.toMutableMap()
+        val current = loadCurrent()
+        reports[current.monthKey] = current
+        return reports.values.sortedBy { it.monthKey }
+    }
+
+    fun exportCsv(): String = buildString {
+        append('\uFEFF')
+        append("month,distance_km,gallons_used,average_km_per_gallon,fuel_cost_usd\r\n")
+        historyIncludingCurrent().forEach { report ->
+            append(report.monthKey).append(',')
+            append(csvNumber(report.distanceKm)).append(',')
+            append(csvNumber(report.fuelGallons)).append(',')
+            append(report.averageKmPerGallon?.let(::csvNumber) ?: "").append(',')
+            append(csvNumber(report.fuelCost)).append("\r\n")
+        }
+    }
+
+    private fun csvNumber(value: Double): String = String.format(Locale.US, "%.2f", value)
 
     private fun write(snapshot: MonthlyFuelEconomySnapshot) {
         preferences.edit()
@@ -142,6 +174,50 @@ class MonthlyFuelEconomyStore(context: Context) {
         private const val PREFS_NAME = "fuel_economy_month"
         private const val MONTH_KEY_PATTERN = "yyyy-MM"
         private const val KEY_MONTH = "month"
+        private const val KEY_DISTANCE_KM = "distance_km"
+        private const val KEY_FUEL_LITERS = "fuel_liters"
+        private const val KEY_FUEL_COST = "fuel_cost"
+    }
+}
+
+/** Permanent archive of finalized calendar months. */
+class MonthlyFuelEconomyHistoryStore(context: Context) {
+    private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    @Synchronized
+    fun save(snapshot: MonthlyFuelEconomySnapshot) {
+        if (snapshot.monthKey.isBlank()) return
+        val months = preferences.getStringSet(KEY_MONTHS, emptySet()).orEmpty().toMutableSet()
+        months.add(snapshot.monthKey)
+        preferences.edit()
+            .putStringSet(KEY_MONTHS, months)
+            .putString(key(snapshot.monthKey, KEY_DISTANCE_KM), snapshot.distanceKm.coerceAtLeast(0.0).toString())
+            .putString(key(snapshot.monthKey, KEY_FUEL_LITERS), snapshot.fuelLiters.coerceAtLeast(0.0).toString())
+            .putString(key(snapshot.monthKey, KEY_FUEL_COST), snapshot.fuelCost.coerceAtLeast(0.0).toString())
+            .apply()
+    }
+
+    @Synchronized
+    fun loadAll(): List<MonthlyFuelEconomySnapshot> =
+        preferences.getStringSet(KEY_MONTHS, emptySet()).orEmpty()
+            .map { month ->
+                MonthlyFuelEconomySnapshot(
+                    monthKey = month,
+                    distanceKm = value(month, KEY_DISTANCE_KM),
+                    fuelLiters = value(month, KEY_FUEL_LITERS),
+                    fuelCost = value(month, KEY_FUEL_COST)
+                )
+            }
+            .sortedBy { it.monthKey }
+
+    private fun value(month: String, field: String): Double =
+        preferences.getString(key(month, field), "0")?.toDoubleOrNull() ?: 0.0
+
+    private fun key(month: String, field: String): String = "$month.$field"
+
+    companion object {
+        private const val PREFS_NAME = "fuel_economy_month_history"
+        private const val KEY_MONTHS = "months"
         private const val KEY_DISTANCE_KM = "distance_km"
         private const val KEY_FUEL_LITERS = "fuel_liters"
         private const val KEY_FUEL_COST = "fuel_cost"
