@@ -30,12 +30,14 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private lateinit var mediaSession: MediaSession
     private lateinit var store: FuelEconomyStore
     private lateinit var monthlyStore: MonthlyFuelEconomyStore
+    private lateinit var dailyStore: DailyFuelEconomyStore
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private var refreshTask: ScheduledFuture<*>? = null
     private var torqueService: ITorqueService? = null
     private var torqueBound = false
     private var snapshot = FuelEconomySnapshot(0.0, 0.0)
     private var monthlySnapshot = MonthlyFuelEconomySnapshot("")
+    private var dailySnapshot = DailyFuelEconomySnapshot("")
     private var telemetry = VehicleTelemetry()
     private var telemetryPids = emptyList<TelemetryPid>()
     private var lastSampleNanos = 0L
@@ -48,8 +50,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
         super.onCreate()
         store = FuelEconomyStore(this)
         monthlyStore = MonthlyFuelEconomyStore(this)
+        dailyStore = DailyFuelEconomyStore(this)
         snapshot = store.load()
         monthlySnapshot = monthlyStore.loadCurrent()
+        dailySnapshot = dailyStore.loadCurrent()
         observedResetGeneration = store.resetGeneration()
         selectedMode = loadMode()
         mediaSession = MediaSession(this, "AA Torque selectable telemetry").apply {
@@ -257,6 +261,15 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     fuelCost = monthlySnapshot.fuelCost +
                         fuelLitersDelta / FuelEconomySnapshot.US_GALLON_LITERS * price
                 )
+                if (dailySnapshot.dayKey != dailyStore.currentDayKey()) {
+                    dailySnapshot = dailyStore.loadCurrent()
+                }
+                dailySnapshot = dailySnapshot.copy(
+                    distanceKm = dailySnapshot.distanceKm + distanceDelta,
+                    fuelLiters = dailySnapshot.fuelLiters + fuelLitersDelta,
+                    fuelCost = dailySnapshot.fuelCost +
+                        fuelLitersDelta / FuelEconomySnapshot.US_GALLON_LITERS * price
+                )
             }
             val instant = if (telemetry.fuelLitersPerHour > 0.01 && telemetry.speedKph > 0.1) {
                 telemetry.speedKph / telemetry.fuelLitersPerHour * FuelEconomySnapshot.US_GALLON_LITERS
@@ -284,6 +297,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             DisplayMode.DIAGNOSTICS -> diagnosticsText(value)
             DisplayMode.FUEL_COST -> fuelCostText(value)
             DisplayMode.MONTHLY -> monthlyText()
+            DisplayMode.DAILY -> dailyText()
         }
         val spotifyArtwork = spotifyArtwork()
         val artwork = spotifyArtwork?.bitmap ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
@@ -412,6 +426,20 @@ class FuelEconomyMediaService : MediaBrowserService() {
         )
     }
 
+    private fun dailyText(): DisplayText {
+        val date = SimpleDateFormat("d MMM", Locale.getDefault()).format(Date())
+        return DisplayText(
+            getString(R.string.mode_daily_title_format, date, two(dailySnapshot.distanceKm)),
+            getString(
+                R.string.mode_daily_subtitle_format,
+                one(dailySnapshot.averageKmPerGallon),
+                two(dailySnapshot.fuelGallons),
+                money(dailySnapshot.fuelCost)
+            ),
+            snapshot.status
+        )
+    }
+
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
         .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
@@ -458,6 +486,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         }
         store.save(snapshot.distanceKm, snapshot.fuelLiters, snapshot.elapsedSeconds)
         monthlySnapshot = monthlyStore.save(monthlySnapshot)
+        dailySnapshot = dailyStore.save(dailySnapshot)
     }
 
     private fun stopRefreshTask() {
@@ -572,7 +601,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         TRIP("mode_trip", R.string.mode_trip, R.string.mode_trip_summary),
         DIAGNOSTICS("mode_diagnostics", R.string.mode_diagnostics, R.string.mode_diagnostics_summary),
         FUEL_COST("mode_fuel_cost", R.string.mode_fuel_cost, R.string.mode_fuel_cost_summary),
-        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary);
+        MONTHLY("mode_monthly", R.string.mode_monthly, R.string.mode_monthly_summary),
+        DAILY("mode_daily", R.string.mode_daily, R.string.mode_daily_summary);
 
         fun next(): DisplayMode = entries[(ordinal + 1) % entries.size]
 

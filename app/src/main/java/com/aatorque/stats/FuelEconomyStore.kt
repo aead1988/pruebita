@@ -126,3 +126,66 @@ class MonthlyFuelEconomyStore(context: Context) {
         private const val KEY_FUEL_COST = "fuel_cost"
     }
 }
+
+data class DailyFuelEconomySnapshot(
+    val dayKey: String,
+    val distanceKm: Double = 0.0,
+    val fuelLiters: Double = 0.0,
+    val fuelCost: Double = 0.0
+) {
+    val averageKmPerGallon: Double?
+        get() = if (fuelLiters > 0.0001) {
+            distanceKm / fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
+        } else null
+
+    val fuelGallons: Double
+        get() = fuelLiters / FuelEconomySnapshot.US_GALLON_LITERS
+}
+
+/** Stores today's totals independently from both trip and monthly records. */
+class DailyFuelEconomyStore(context: Context) {
+    private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun currentDayKey(now: Date = Date()): String =
+        SimpleDateFormat(DAY_KEY_PATTERN, Locale.US).format(now)
+
+    @Synchronized
+    fun loadCurrent(): DailyFuelEconomySnapshot {
+        val currentDay = currentDayKey()
+        if (preferences.getString(KEY_DAY, null) != currentDay) {
+            return DailyFuelEconomySnapshot(currentDay).also(::write)
+        }
+        return DailyFuelEconomySnapshot(
+            dayKey = currentDay,
+            distanceKm = preferences.getString(KEY_DISTANCE_KM, "0")?.toDoubleOrNull() ?: 0.0,
+            fuelLiters = preferences.getString(KEY_FUEL_LITERS, "0")?.toDoubleOrNull() ?: 0.0,
+            fuelCost = preferences.getString(KEY_FUEL_COST, "0")?.toDoubleOrNull() ?: 0.0
+        )
+    }
+
+    @Synchronized
+    fun save(snapshot: DailyFuelEconomySnapshot): DailyFuelEconomySnapshot {
+        val currentDay = currentDayKey()
+        val value = if (snapshot.dayKey == currentDay) snapshot else DailyFuelEconomySnapshot(currentDay)
+        write(value)
+        return value
+    }
+
+    private fun write(snapshot: DailyFuelEconomySnapshot) {
+        preferences.edit()
+            .putString(KEY_DAY, snapshot.dayKey)
+            .putString(KEY_DISTANCE_KM, snapshot.distanceKm.coerceAtLeast(0.0).toString())
+            .putString(KEY_FUEL_LITERS, snapshot.fuelLiters.coerceAtLeast(0.0).toString())
+            .putString(KEY_FUEL_COST, snapshot.fuelCost.coerceAtLeast(0.0).toString())
+            .apply()
+    }
+
+    companion object {
+        private const val PREFS_NAME = "fuel_economy_day"
+        private const val DAY_KEY_PATTERN = "yyyy-MM-dd"
+        private const val KEY_DAY = "day"
+        private const val KEY_DISTANCE_KM = "distance_km"
+        private const val KEY_FUEL_LITERS = "fuel_liters"
+        private const val KEY_FUEL_COST = "fuel_cost"
+    }
+}
