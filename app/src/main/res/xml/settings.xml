@@ -63,6 +63,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/media">
+        <Preference
+            android:key="manageFuelModules"
+            android:persistent="false"
+            android:summary="@string/fuel_modules_summary"
+            android:title="@string/fuel_modules_title"
+            app:fragment="com.aatorque.prefs.FuelModuleSettingsFragment" />
         <EditTextPreference
             android:defaultValue="3.00"
             android:inputType="numberDecimal"

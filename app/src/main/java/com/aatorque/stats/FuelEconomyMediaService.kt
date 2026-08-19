@@ -33,6 +33,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private lateinit var monthlyStore: MonthlyFuelEconomyStore
     private lateinit var dailyStore: DailyFuelEconomyStore
     private lateinit var weeklyStore: WeeklyFuelEconomyStore
+    private lateinit var moduleStore: FuelModuleStore
     private val executor = Executors.newSingleThreadScheduledExecutor()
     private var refreshTask: ScheduledFuture<*>? = null
     private var torqueService: ITorqueService? = null
@@ -48,7 +49,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var lastPersistNanos = 0L
     private var tracking = true
     private var observedResetGeneration = 0L
-    private var selectedMode = DisplayMode.FUEL_COST
+    private var selectedModuleId = FuelModuleStore.ID_FUEL_COST
     private var journeyStartedAt = System.currentTimeMillis()
 
     override fun onCreate() {
@@ -57,13 +58,14 @@ class FuelEconomyMediaService : MediaBrowserService() {
         monthlyStore = MonthlyFuelEconomyStore(this)
         dailyStore = DailyFuelEconomyStore(this)
         weeklyStore = WeeklyFuelEconomyStore(this)
+        moduleStore = FuelModuleStore(this)
         snapshot = store.load()
         journeySnapshot = FuelEconomySnapshot(0.0, 0.0, status = getString(R.string.fuel_media_waiting))
         monthlySnapshot = monthlyStore.loadCurrent()
         dailySnapshot = dailyStore.loadCurrent()
         weeklySnapshot = weeklyStore.loadCurrent()
         observedResetGeneration = store.resetGeneration()
-        selectedMode = loadMode()
+        selectedModuleId = loadModuleId()
         mediaSession = MediaSession(this, "AA Torque selectable telemetry").apply {
             setCallback(object : MediaSession.Callback() {
                 override fun onPlay() {
@@ -74,7 +76,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 }
 
                 override fun onPlayFromMediaId(mediaId: String, extras: Bundle?) {
-                    DisplayMode.fromMediaId(mediaId)?.let(::selectMode)
+                    selectModule(mediaId)
                     onPlay()
                 }
 
@@ -114,7 +116,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     when (action) {
                         ACTION_RESET_TRIP -> resetTrip()
                         ACTION_TANK_FILLED -> tankFilled()
-                        ACTION_NEXT_MODE -> selectMode(selectedMode.next())
+                        ACTION_NEXT_MODE -> selectNextModule()
                         ACTION_EXPORT_MONTHLY_CSV -> exportMonthlyCsv()
                     }
                 }
@@ -140,11 +142,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
             .getBoolean(PREF_SPOTIFY_ARTWORK, false)
         val artwork = (if (useSpotifyArtwork) spotifyArtwork()?.bitmap else null)
             ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-        val items = DisplayMode.entries.map { mode ->
+        val items = moduleStore.activeModules().map { module ->
             val description = MediaDescription.Builder()
-                .setMediaId(mode.mediaId)
-                .setTitle(getString(mode.titleResource))
-                .setSubtitle(getString(mode.subtitleResource))
+                .setMediaId(module.id)
+                .setTitle(moduleTitle(module))
+                .setSubtitle(moduleSummary(module))
                 .setIconBitmap(artwork)
                 .build()
             MediaItem(description, FLAG_PLAYABLE)
@@ -360,20 +362,23 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
-        val text = when (selectedMode) {
-            DisplayMode.FUEL_COST -> fuelCostText(journeySnapshot)
-            DisplayMode.DAILY -> dailyText()
-            DisplayMode.WEEKLY -> weeklyText()
-            DisplayMode.MONTHLY -> monthlyText()
-            DisplayMode.SINCE_REFUEL -> sinceRefuelText(value)
-            DisplayMode.ANNUAL -> annualText()
+        val module = moduleStore.activeModules().firstOrNull { it.id == selectedModuleId }
+            ?: moduleStore.activeModules().first().also { selectedModuleId = it.id }
+        val text = when (module.id) {
+            FuelModuleStore.ID_FUEL_COST -> fuelCostText(journeySnapshot)
+            FuelModuleStore.ID_DAILY -> dailyText()
+            FuelModuleStore.ID_WEEKLY -> weeklyText()
+            FuelModuleStore.ID_MONTHLY -> monthlyText()
+            FuelModuleStore.ID_SINCE_REFUEL -> sinceRefuelText(value)
+            FuelModuleStore.ID_ANNUAL -> annualText()
+            else -> customModuleText(module)
         }
         val spotifyArtwork = spotifyArtwork()
         val useSpotifyArtwork = PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(PREF_SPOTIFY_ARTWORK, false)
         val artwork = (if (useSpotifyArtwork) spotifyArtwork?.bitmap else null)
             ?: BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-        val mediaId = selectedMode.mediaId + ":" + (spotifyArtwork?.key ?: "default")
+        val mediaId = module.id + ":" + (spotifyArtwork?.key ?: "default")
         val vehicleLine = listOf(text.title, text.subtitle).joinToString(" · ")
         val musicLine = spotifyArtwork?.nowPlayingLine() ?: getString(R.string.fuel_media_no_song)
         mediaSession.setMetadata(
@@ -476,6 +481,25 @@ class FuelEconomyMediaService : MediaBrowserService() {
             getString(R.string.mode_fuel_cost_subtitle_format, two(value.fuelGallons), money(value.fuelGallons * price)),
             value.status
         )
+    }
+
+    private fun customModuleText(module: FuelModule): DisplayText {
+        val values = module.metrics.map { metric ->
+            when (metric) {
+                FuelModuleMetric.FLOW_GPH -> "${two(telemetry.fuelLitersPerHour / FuelEconomySnapshot.US_GALLON_LITERS)} gal/h"
+                FuelModuleMetric.DISTANCE_KM -> "${two(journeySnapshot.distanceKm)} km"
+                FuelModuleMetric.GALLONS -> "${two(journeySnapshot.fuelGallons)} gal"
+                FuelModuleMetric.COST -> money(journeySnapshot.fuelGallons * fuelPricePerGallon())
+                FuelModuleMetric.AVERAGE_KMPG -> "${one(journeySnapshot.averageKmPerGallon)} km/gal"
+                FuelModuleMetric.DURATION -> "${duration(journeySnapshot.elapsedSeconds)} h"
+                FuelModuleMetric.SPEED -> "${one(telemetry.speedKph)} km/h"
+                FuelModuleMetric.RPM -> "${whole(telemetry.rpm)} rpm"
+                FuelModuleMetric.COOLANT -> "${one(telemetry.coolantCelsius)} °C"
+                FuelModuleMetric.VOLTAGE -> "${one(telemetry.voltage)} V"
+                FuelModuleMetric.FUEL_LEVEL -> "${one(telemetry.fuelLevelPercent)}%"
+            }
+        }
+        return DisplayText(module.name, values.joinToString(" · "), snapshot.status)
     }
 
     private fun monthlyText(): DisplayText {
@@ -610,16 +634,47 @@ class FuelEconomyMediaService : MediaBrowserService() {
         mediaSession.setPlaybackState(builder.build())
     }
 
-    private fun selectMode(mode: DisplayMode) {
-        selectedMode = mode
-        getSharedPreferences(MODE_PREFS, MODE_PRIVATE).edit().putString(MODE_KEY, mode.name).apply()
+    private fun selectModule(moduleId: String) {
+        val module = moduleStore.activeModules().firstOrNull { it.id == moduleId } ?: return
+        selectedModuleId = module.id
+        getSharedPreferences(MODE_PREFS, MODE_PRIVATE).edit().putString(MODE_KEY, module.id).apply()
         publishMetadata(snapshot)
         publishPlaybackState()
     }
 
-    private fun loadMode(): DisplayMode {
-        val name = getSharedPreferences(MODE_PREFS, MODE_PRIVATE).getString(MODE_KEY, null)
-        return DisplayMode.entries.firstOrNull { it.name == name } ?: DisplayMode.FUEL_COST
+    private fun selectNextModule() {
+        val active = moduleStore.activeModules()
+        val currentIndex = active.indexOfFirst { it.id == selectedModuleId }
+        selectModule(active[(currentIndex + 1).mod(active.size)].id)
+    }
+
+    private fun loadModuleId(): String {
+        val saved = getSharedPreferences(MODE_PREFS, MODE_PRIVATE).getString(MODE_KEY, null)
+        return moduleStore.activeModules().firstOrNull {
+            it.id == saved || DisplayMode.entries.firstOrNull { mode -> mode.name == saved }?.mediaId == it.id
+        }?.id ?: moduleStore.activeModules().first().id
+    }
+
+    private fun moduleTitle(module: FuelModule): String = if (!module.builtIn) module.name else when (module.id) {
+        FuelModuleStore.ID_FUEL_COST -> getString(R.string.mode_fuel_cost)
+        FuelModuleStore.ID_DAILY -> getString(R.string.mode_daily)
+        FuelModuleStore.ID_WEEKLY -> getString(R.string.mode_weekly)
+        FuelModuleStore.ID_MONTHLY -> getString(R.string.mode_monthly)
+        FuelModuleStore.ID_SINCE_REFUEL -> getString(R.string.mode_since_refuel)
+        FuelModuleStore.ID_ANNUAL -> getString(R.string.mode_annual)
+        else -> module.id
+    }
+
+    private fun moduleSummary(module: FuelModule): String = if (!module.builtIn) {
+        getString(R.string.fuel_modules_custom_summary)
+    } else when (module.id) {
+        FuelModuleStore.ID_FUEL_COST -> getString(R.string.mode_fuel_cost_summary)
+        FuelModuleStore.ID_DAILY -> getString(R.string.mode_daily_summary)
+        FuelModuleStore.ID_WEEKLY -> getString(R.string.mode_weekly_summary)
+        FuelModuleStore.ID_MONTHLY -> getString(R.string.mode_monthly_summary)
+        FuelModuleStore.ID_SINCE_REFUEL -> getString(R.string.mode_since_refuel_summary)
+        FuelModuleStore.ID_ANNUAL -> getString(R.string.mode_annual_summary)
+        else -> ""
     }
 
     private fun resetTrip() {
