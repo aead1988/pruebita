@@ -243,7 +243,7 @@
     <string name="mode_diagnostics">Diagnóstico</string>
     <string name="mode_diagnostics_summary">Flujo, nivel, temperatura y estado</string>
     <string name="mode_fuel_cost">Combustible y costo</string>
-    <string name="mode_fuel_cost_summary">Flujo, distancia, galones usados y costo</string>
+    <string name="mode_fuel_cost_summary">Datos del viaje desde que se enciende hasta que se apaga el auto</string>
     <string name="mode_monthly">Análisis mensual</string>
     <string name="mode_monthly_summary">Distancia, promedio, galones y costo total del mes</string>
     <string name="mode_daily">Análisis diario</string>

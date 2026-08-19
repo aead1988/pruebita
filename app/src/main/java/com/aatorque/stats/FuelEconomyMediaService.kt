@@ -37,6 +37,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var torqueService: ITorqueService? = null
     private var torqueBound = false
     private var snapshot = FuelEconomySnapshot(0.0, 0.0)
+    private var journeySnapshot = FuelEconomySnapshot(0.0, 0.0)
     private var monthlySnapshot = MonthlyFuelEconomySnapshot("")
     private var dailySnapshot = DailyFuelEconomySnapshot("")
     private var weeklySnapshot = WeeklyFuelEconomySnapshot("")
@@ -55,6 +56,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         dailyStore = DailyFuelEconomyStore(this)
         weeklyStore = WeeklyFuelEconomyStore(this)
         snapshot = store.load()
+        journeySnapshot = FuelEconomySnapshot(0.0, 0.0, status = getString(R.string.fuel_media_waiting))
         monthlySnapshot = monthlyStore.loadCurrent()
         dailySnapshot = dailyStore.loadCurrent()
         weeklySnapshot = weeklyStore.loadCurrent()
@@ -134,6 +136,13 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private val torqueConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             torqueService = ITorqueService.Stub.asInterface(binder)
+            journeySnapshot = FuelEconomySnapshot(
+                0.0,
+                0.0,
+                connected = true,
+                status = getString(R.string.fuel_media_waiting)
+            )
+            lastSampleNanos = System.nanoTime()
             executor.execute(::discoverPidsAndStart)
         }
 
@@ -142,6 +151,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
             torqueBound = false
             telemetryPids = emptyList()
             stopRefreshTask()
+            journeySnapshot = journeySnapshot.copy(
+                connected = false,
+                status = getString(R.string.fuel_media_disconnected)
+            )
             publishMetadata(snapshot.copy(connected = false, status = getString(R.string.fuel_media_disconnected)))
         }
     }
@@ -157,7 +170,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
             Timber.e(error, "Unable to bind selectable media service to Torque Pro")
             false
         }
-        if (!torqueBound) publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_torque_required)))
+        if (!torqueBound) {
+            journeySnapshot = journeySnapshot.copy(status = getString(R.string.fuel_media_torque_required))
+            publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_torque_required)))
+        }
     }
 
     private fun discoverPidsAndStart() {
@@ -181,6 +197,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     fuelFlowScale(it.unit) != null
             }
             if (fuelFlow == null) {
+                journeySnapshot = journeySnapshot.copy(
+                    connected = true,
+                    status = getString(R.string.fuel_media_no_flow_pid)
+                )
                 publishMetadata(snapshot.copy(connected = true, status = getString(R.string.fuel_media_no_flow_pid)))
                 return
             }
@@ -224,6 +244,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             refreshTask = executor.scheduleWithFixedDelay(::sampleTorque, 0, SAMPLE_INTERVAL_MS, TimeUnit.MILLISECONDS)
         } catch (error: Exception) {
             Timber.e(error, "Unable to discover selectable telemetry PIDs")
+            journeySnapshot = journeySnapshot.copy(status = getString(R.string.fuel_media_pid_error))
             publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_pid_error)))
         }
     }
@@ -259,6 +280,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
                     distanceKm = snapshot.distanceKm + distanceDelta,
                     fuelLiters = snapshot.fuelLiters + fuelLitersDelta,
                     elapsedSeconds = snapshot.elapsedSeconds + elapsedSeconds
+                )
+                journeySnapshot = journeySnapshot.copy(
+                    distanceKm = journeySnapshot.distanceKm + distanceDelta,
+                    fuelLiters = journeySnapshot.fuelLiters + fuelLitersDelta,
+                    elapsedSeconds = journeySnapshot.elapsedSeconds + elapsedSeconds
                 )
                 if (monthlySnapshot.monthKey != monthlyStore.currentMonthKey()) {
                     monthlySnapshot = monthlyStore.loadCurrent()
@@ -296,6 +322,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 connected = true,
                 status = if (tracking) getString(R.string.fuel_media_recording) else getString(R.string.fuel_media_paused)
             )
+            journeySnapshot = journeySnapshot.copy(
+                instantKmPerGallon = instant,
+                connected = true,
+                status = if (tracking) getString(R.string.fuel_media_recording) else getString(R.string.fuel_media_paused)
+            )
             publishMetadata(snapshot)
             if (now - lastPersistNanos >= PERSIST_INTERVAL_NANOS) {
                 persistTrip()
@@ -308,7 +339,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
         val text = when (selectedMode) {
-            DisplayMode.FUEL_COST -> fuelCostText(value)
+            DisplayMode.FUEL_COST -> fuelCostText(journeySnapshot)
             DisplayMode.DAILY -> dailyText()
             DisplayMode.WEEKLY -> weeklyText()
             DisplayMode.MONTHLY -> monthlyText()
@@ -514,6 +545,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         store.reset()
         observedResetGeneration = store.resetGeneration()
         snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
+        journeySnapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
         lastSampleNanos = System.nanoTime()
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_trip_reset)))
     }

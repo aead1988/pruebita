@@ -31,11 +31,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.47-custom-next-button.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.48-current-journey.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.47-custom-next-button
-          path: app/build/outputs/apk/release/AA-Torque-2.0.47-custom-next-button.apk
+          name: AA-Torque-2.0.48-current-journey
+          path: app/build/outputs/apk/release/AA-Torque-2.0.48-current-journey.apk
           if-no-files-found: error
