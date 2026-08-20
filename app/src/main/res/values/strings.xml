@@ -296,6 +296,12 @@
     <string name="daily_summary_export_failed">There are no completed trips to summarize yet</string>
     <string name="tank_report_exported">Tank-period report saved in Drive</string>
     <string name="tank_report_export_failed">Unable to save the report; tank-period data was not reset</string>
+    <string name="tank_price_entry_title">Price per gallon · %1$s</string>
+    <string name="tank_price_entry_instruction">Adjust the value, then press the center Play button to confirm</string>
+    <string name="tank_price_minus_ten">− $0.10</string>
+    <string name="tank_price_minus_one">− $0.01</string>
+    <string name="tank_price_plus_one">+ $0.01</string>
+    <string name="tank_price_plus_ten">+ $0.10</string>
     <string name="fuel_modules_title">Manage modules</string>
     <string name="fuel_modules_summary">Create, hide, reorder or delete Android Auto modules</string>
     <string name="fuel_modules_create">Create module</string>

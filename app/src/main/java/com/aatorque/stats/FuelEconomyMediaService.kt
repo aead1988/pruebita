@@ -1,5 +1,7 @@
 package com.aatorque.stats
 
+import android.app.ActivityOptions
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -12,6 +14,7 @@ import android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE
 import android.media.session.MediaSession
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.service.media.MediaBrowserService
@@ -25,6 +28,7 @@ import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 /** Android Auto media source with selectable fuel, engine, trip and diagnostic modes. */
 class FuelEconomyMediaService : MediaBrowserService() {
@@ -51,6 +55,11 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var observedResetGeneration = 0L
     private var selectedModuleId = FuelModuleStore.ID_FUEL_COST
     private var journeyStartedAt = System.currentTimeMillis()
+    private var tankPriceEntryMode = false
+    private var pendingFuelPrice = 0.0
+    private var spotifyLaunchRequested = false
+    private var spotifyAutoPlayPending = true
+    private var spotifySessionListener: MediaSessionManager.OnActiveSessionsChangedListener? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -69,6 +78,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
         mediaSession = MediaSession(this, "Huno selectable telemetry").apply {
             setCallback(object : MediaSession.Callback() {
                 override fun onPlay() {
+                    if (tankPriceEntryMode) {
+                        confirmTankFilled()
+                        return
+                    }
                     tracking = true
                     this@FuelEconomyMediaService.mediaSession.isActive = true
                     publishPlaybackState()
@@ -101,12 +114,17 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 }
 
                 override fun onPause() {
+                    if (tankPriceEntryMode) return
                     tracking = false
                     persistTrip()
                     publishPlaybackState()
                 }
 
                 override fun onStop() {
+                    if (tankPriceEntryMode) {
+                        cancelTankPriceEntry()
+                        return
+                    }
                     tracking = false
                     persistTrip()
                     publishPlaybackState()
@@ -115,9 +133,13 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 override fun onCustomAction(action: String, extras: Bundle?) {
                     when (action) {
                         ACTION_RESET_TRIP -> resetTrip()
-                        ACTION_TANK_FILLED -> tankFilled()
+                        ACTION_TANK_FILLED -> beginTankPriceEntry()
                         ACTION_NEXT_MODE -> selectNextModule()
                         ACTION_EXPORT_MONTHLY_CSV -> exportMonthlyCsv()
+                        ACTION_PRICE_MINUS_TEN -> adjustPendingFuelPrice(-0.10)
+                        ACTION_PRICE_MINUS_ONE -> adjustPendingFuelPrice(-0.01)
+                        ACTION_PRICE_PLUS_ONE -> adjustPendingFuelPrice(0.01)
+                        ACTION_PRICE_PLUS_TEN -> adjustPendingFuelPrice(0.10)
                     }
                 }
             })
@@ -127,6 +149,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_waiting)))
         publishPlaybackState()
         connectToTorque()
+        registerSpotifySessionListener()
         scheduleSpotifyAutoPlay()
         scheduleDailyCardRecovery()
     }
@@ -365,6 +388,23 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
+        if (tankPriceEntryMode) {
+            val artwork = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            val price = String.format(Locale.US, "$%.2f", pendingFuelPrice)
+            mediaSession.setMetadata(
+                MediaMetadata.Builder()
+                    .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, MEDIA_ID_TANK_PRICE)
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, getString(R.string.tank_price_entry_title, price))
+                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, getString(R.string.tank_price_entry_title, price))
+                    .putString(MediaMetadata.METADATA_KEY_ARTIST, getString(R.string.tank_price_entry_instruction))
+                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, getString(R.string.tank_price_entry_instruction))
+                    .putBitmap(MediaMetadata.METADATA_KEY_ART, artwork)
+                    .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
+                    .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, artwork)
+                    .build()
+            )
+            return
+        }
         val module = moduleStore.activeModules().firstOrNull { it.id == selectedModuleId }
             ?: moduleStore.activeModules().first().also { selectedModuleId = it.id }
         val text = when (module.id) {
@@ -622,6 +662,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
      * Huno's MediaBrowserService is created.
      */
     private fun scheduleSpotifyAutoPlay() {
+        spotifyAutoPlayPending = true
         SPOTIFY_AUTO_PLAY_DELAYS_SECONDS.forEach { delaySeconds ->
             try {
                 executor.schedule({ resumeSpotifyPlayback() }, delaySeconds, TimeUnit.SECONDS)
@@ -632,19 +673,79 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun resumeSpotifyPlayback(): Boolean {
-        if (!NotiService.isNotificationAccessEnabled(this)) return false
+        if (!spotifyAutoPlayPending) return true
+        if (!NotiService.isNotificationAccessEnabled(this)) {
+            requestSpotifyStartup()
+            return false
+        }
+        registerSpotifySessionListener()
         return try {
             val manager = getSystemService(MediaSessionManager::class.java)
             val listener = ComponentName(this, NotiService::class.java)
             val spotify = manager.getActiveSessions(listener)
-                .firstOrNull { it.packageName == SPOTIFY_PACKAGE } ?: return false
+                .firstOrNull { it.packageName == SPOTIFY_PACKAGE }
+            if (spotify == null) {
+                requestSpotifyStartup()
+                return false
+            }
             if (spotify.playbackState?.state != PlaybackState.STATE_PLAYING) {
                 spotify.transportControls.play()
                 Timber.i("Requested Spotify playback after Android Auto start")
             }
+            spotifyAutoPlayPending = false
             true
         } catch (error: Exception) {
             Timber.w(error, "Unable to resume Spotify automatically")
+            false
+        }
+    }
+
+    private fun registerSpotifySessionListener() {
+        if (!NotiService.isNotificationAccessEnabled(this) || spotifySessionListener != null) return
+        try {
+            val manager = getSystemService(MediaSessionManager::class.java)
+            val component = ComponentName(this, NotiService::class.java)
+            val listener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
+                if (!spotifyAutoPlayPending) return@OnActiveSessionsChangedListener
+                val spotify = controllers?.firstOrNull { it.packageName == SPOTIFY_PACKAGE }
+                    ?: return@OnActiveSessionsChangedListener
+                if (spotify.playbackState?.state != PlaybackState.STATE_PLAYING) {
+                    spotify.transportControls.play()
+                    Timber.i("Requested Spotify playback as soon as its media session appeared")
+                }
+                spotifyAutoPlayPending = false
+            }
+            manager.addOnActiveSessionsChangedListener(listener, component)
+            spotifySessionListener = listener
+        } catch (error: Exception) {
+            Timber.w(error, "Unable to observe Spotify media sessions")
+        }
+    }
+
+    private fun requestSpotifyStartup(): Boolean {
+        if (spotifyLaunchRequested) return false
+        val launchIntent = packageManager.getLaunchIntentForPackage(SPOTIFY_PACKAGE) ?: return false
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        return try {
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                SPOTIFY_LAUNCH_REQUEST_CODE,
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val options = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+                    .toBundle()
+            } else {
+                null
+            }
+            pendingIntent.send(this, 0, null, null, null, null, options)
+            spotifyLaunchRequested = true
+            Timber.i("Requested Spotify startup before automatic playback")
+            true
+        } catch (error: Exception) {
+            Timber.w(error, "Unable to start Spotify automatically")
             false
         }
     }
@@ -670,10 +771,21 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val builder = PlaybackState.Builder()
             .setActions(actions)
             .setState(
-                if (tracking) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
+                if (tankPriceEntryMode) PlaybackState.STATE_PAUSED
+                else if (tracking) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
-                if (tracking) 1f else 0f
+                if (tracking && !tankPriceEntryMode) 1f else 0f
             )
+        if (tankPriceEntryMode) {
+            builder
+                .addCustomAction(ACTION_PRICE_MINUS_TEN, getString(R.string.tank_price_minus_ten), R.drawable.arrow_back)
+                .addCustomAction(ACTION_PRICE_MINUS_ONE, getString(R.string.tank_price_minus_one), R.drawable.arrow_back)
+                .addCustomAction(ACTION_PRICE_PLUS_ONE, getString(R.string.tank_price_plus_one), R.drawable.arrow_forward)
+                .addCustomAction(ACTION_PRICE_PLUS_TEN, getString(R.string.tank_price_plus_ten), R.drawable.arrow_forward)
+            mediaSession.setPlaybackState(builder.build())
+            return
+        }
+        builder
             .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(
@@ -683,6 +795,38 @@ class FuelEconomyMediaService : MediaBrowserService() {
             )
             .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
+    }
+
+    private fun beginTankPriceEntry() {
+        pendingFuelPrice = fuelPricePerGallon().coerceAtLeast(MIN_FUEL_PRICE)
+        tankPriceEntryMode = true
+        publishMetadata(snapshot)
+        publishPlaybackState()
+    }
+
+    private fun adjustPendingFuelPrice(delta: Double) {
+        if (!tankPriceEntryMode) return
+        pendingFuelPrice = ((pendingFuelPrice + delta).coerceAtLeast(MIN_FUEL_PRICE) * 100.0)
+            .roundToInt() / 100.0
+        publishMetadata(snapshot)
+    }
+
+    private fun confirmTankFilled() {
+        if (!tankPriceEntryMode) return
+        PreferenceManager.getDefaultSharedPreferences(this).edit()
+            .putString(PREF_FUEL_PRICE, String.format(Locale.US, "%.2f", pendingFuelPrice))
+            .apply()
+        tankPriceEntryMode = false
+        tankFilled()
+        publishMetadata(snapshot)
+        publishPlaybackState()
+    }
+
+    private fun cancelTankPriceEntry() {
+        if (!tankPriceEntryMode) return
+        tankPriceEntryMode = false
+        publishMetadata(snapshot)
+        publishPlaybackState()
     }
 
     private fun selectModule(moduleId: String) {
@@ -815,6 +959,15 @@ class FuelEconomyMediaService : MediaBrowserService() {
             }
         }
         torqueBound = false
+        spotifySessionListener?.let { listener ->
+            try {
+                getSystemService(MediaSessionManager::class.java)
+                    .removeOnActiveSessionsChangedListener(listener)
+            } catch (_: Exception) {
+                // The listener was already removed with the notification service.
+            }
+        }
+        spotifySessionListener = null
         mediaSession.release()
         super.onDestroy()
     }
@@ -924,7 +1077,12 @@ class FuelEconomyMediaService : MediaBrowserService() {
         const val ACTION_NEXT_MODE = "com.aatorque.stats.action.NEXT_FUEL_MODE"
         const val ACTION_TANK_FILLED = "com.aatorque.stats.action.TANK_FILLED"
         const val ACTION_EXPORT_MONTHLY_CSV = "com.aatorque.stats.action.EXPORT_MONTHLY_CSV"
+        private const val ACTION_PRICE_MINUS_TEN = "com.aatorque.stats.action.PRICE_MINUS_TEN"
+        private const val ACTION_PRICE_MINUS_ONE = "com.aatorque.stats.action.PRICE_MINUS_ONE"
+        private const val ACTION_PRICE_PLUS_ONE = "com.aatorque.stats.action.PRICE_PLUS_ONE"
+        private const val ACTION_PRICE_PLUS_TEN = "com.aatorque.stats.action.PRICE_PLUS_TEN"
         private const val MEDIA_ROOT_ID = "aa_torque_modes_root"
+        private const val MEDIA_ID_TANK_PRICE = "huno_tank_price"
         private const val SAMPLE_INTERVAL_MS = 1_000L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
         private const val MAX_SAMPLE_GAP_NANOS = 5_000_000_000L
@@ -936,8 +1094,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val PREF_TANK_GALLONS = "fuelTankGallons"
         private const val PREF_SPOTIFY_ARTWORK = "spotifyArtworkEnabled"
         private const val SPOTIFY_PACKAGE = "com.spotify.music"
+        private const val SPOTIFY_LAUNCH_REQUEST_CODE = 6202
+        private const val MIN_FUEL_PRICE = 0.01
         private const val MAX_ARTWORK_EDGE_PX = 384
-        private val SPOTIFY_AUTO_PLAY_DELAYS_SECONDS = longArrayOf(1L, 4L, 10L, 20L)
+        private val SPOTIFY_AUTO_PLAY_DELAYS_SECONDS = longArrayOf(1L, 4L, 10L, 20L, 35L)
         private val DAILY_CARD_RECOVERY_DELAYS_SECONDS = longArrayOf(5L, 30L)
     }
 }

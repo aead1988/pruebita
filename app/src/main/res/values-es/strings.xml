@@ -311,6 +311,12 @@
     <string name="daily_summary_export_failed">Todavía no hay viajes finalizados para resumir</string>
     <string name="tank_report_exported">Informe de la tanqueada guardado en Drive</string>
     <string name="tank_report_export_failed">No se pudo guardar el informe; la tanqueada no fue reiniciada</string>
+    <string name="tank_price_entry_title">Precio por galón · %1$s</string>
+    <string name="tank_price_entry_instruction">Ajusta el valor y pulsa el botón central Reproducir para confirmar</string>
+    <string name="tank_price_minus_ten">− $0,10</string>
+    <string name="tank_price_minus_one">− $0,01</string>
+    <string name="tank_price_plus_one">+ $0,01</string>
+    <string name="tank_price_plus_ten">+ $0,10</string>
     <string name="fuel_modules_title">Administrar módulos</string>
     <string name="fuel_modules_summary">Crear, ocultar, ordenar o eliminar módulos de Android Auto</string>
     <string name="fuel_modules_create">Crear módulo</string>
