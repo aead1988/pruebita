@@ -32,11 +32,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/AA-Torque-2.0.56-daily-card-spotify.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Huno-2.0.57.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AA-Torque-2.0.56-daily-card-spotify
-          path: app/build/outputs/apk/release/AA-Torque-2.0.56-daily-card-spotify.apk
+          name: Huno-2.0.57
+          path: app/build/outputs/apk/release/Huno-2.0.57.apk
           if-no-files-found: error

@@ -66,7 +66,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         weeklySnapshot = weeklyStore.loadCurrent()
         observedResetGeneration = store.resetGeneration()
         selectedModuleId = loadModuleId()
-        mediaSession = MediaSession(this, "AA Torque selectable telemetry").apply {
+        mediaSession = MediaSession(this, "Huno selectable telemetry").apply {
             setCallback(object : MediaSession.Callback() {
                 override fun onPlay() {
                     tracking = true
@@ -619,7 +619,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     /**
      * Resumes Spotify after Android Auto and its media sessions have finished starting.
      * Several attempts are intentional: Spotify is often registered a few seconds after
-     * AA Torque's MediaBrowserService is created.
+     * Huno's MediaBrowserService is created.
      */
     private fun scheduleSpotifyAutoPlay() {
         SPOTIFY_AUTO_PLAY_DELAYS_SECONDS.forEach { delaySeconds ->

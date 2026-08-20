@@ -24,7 +24,7 @@
         android:name="com.aatorque.stats.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/app_brand_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
@@ -35,7 +35,7 @@
         <activity
             android:name="com.aatorque.prefs.SettingsActivity"
             android:exported="true"
-            android:label="@string/activity_settings_title"
+            android:label="@string/app_brand_name"
             android:icon="@mipmap/ic_launcher"
             android:launchMode="singleTop">
             <intent-filter>
@@ -48,7 +48,7 @@
         <service
             android:name="com.aatorque.stats.CarService"
             android:exported="true"
-            android:label="@string/app_car_service_name"
+            android:label="@string/app_brand_name"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -71,7 +71,7 @@
         <service
             android:name=".NotiService"
             android:exported="true"
-            android:label="Enable media controls"
+            android:label="@string/app_brand_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -81,7 +81,7 @@
         <service
             android:name=".FuelEconomyMediaService"
             android:exported="true"
-            android:label="@string/fuel_media_service_name">
+            android:label="@string/app_brand_name">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>

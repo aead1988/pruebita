@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="activity_credits_title">Credits</string>
-    <string name="activity_main_title">Performance Monitor</string>
-    <string name="activity_settings_title">AA Torque Settings</string>
+    <string name="activity_main_title">Huno</string>
+    <string name="activity_settings_title">Huno</string>
     <string name="activity_stopwatch_title">Stopwatch</string>
-    <string name="app_car_service_name">AA Torque</string>
-    <string name="app_name">AA Torque</string>
+    <string name="app_car_service_name">Huno</string>
+    <string name="app_name">Huno</string>
+    <string name="app_brand_name" translatable="false">Huno</string>
     <string name="credits_author">Based on the app made by:</string>
     <string name="credits_basedon">Based on the SDK and demo App by:</string>
     <string name="credits_drivesafely">Drive Safely.</string>
@@ -175,7 +176,7 @@
     <string name="minmax_below_desc">Place min/max values below gauge instead of overlapping the bottom of the gauge</string>
     <string name="media">Media</string>
     <string name="media_background_title">Spotify cover background</string>
-    <string name="media_background_summary">Use the currently playing Spotify cover in AA Torque and Android Auto</string>
+    <string name="media_background_summary">Use the currently playing Spotify cover in Huno and Android Auto</string>
     <string name="opacity_title">Gauge opacity</string>
     <string name="opacity_summary">Dim gauges to show more of background</string>
     <string name="media_blur_title">Blur artwork</string>
@@ -196,7 +197,7 @@
     <string name="value">Value</string>
     <string name="color">Color</string>
     <string name="invalid_settings">Attempted to import invalid settings file.</string>
-    <string name="fuel_media_service_name">AA Torque Fuel Economy</string>
+    <string name="fuel_media_service_name">Huno Fuel Economy</string>
     <string name="fuel_media_item_title">Fuel economy</string>
     <string name="fuel_media_item_subtitle">Live and persistent trip data</string>
     <string name="fuel_media_waiting">Waiting for Torque Pro</string>
@@ -282,15 +283,15 @@
     <string name="monthly_history_location_configured">Folder configured for daily summaries and tank-period reports</string>
     <string name="monthly_history_location_saved">Report folder saved</string>
     <string name="monthly_history_location_failed">Unable to save folder permission</string>
-    <string name="monthly_history_location_required">Configure the report folder in AA Torque first</string>
+    <string name="monthly_history_location_required">Configure the report folder in Huno first</string>
     <string name="fuel_archive_exported">Results, award and backup saved</string>
     <string name="fuel_archive_export_failed">Unable to save results and backup</string>
-    <string name="fuel_backup_restore_title">Restore AA Torque backup</string>
+    <string name="fuel_backup_restore_title">Restore Huno backup</string>
     <string name="fuel_backup_restore_summary">Restores since-refuel consumption, monthly history, trips and awards from a JSON file</string>
-    <string name="fuel_backup_restore_confirm">Backup data will replace the current consumption history. Select only a backup created by AA Torque.</string>
+    <string name="fuel_backup_restore_confirm">Backup data will replace the current consumption history. Select only a backup created by Huno.</string>
     <string name="fuel_backup_restore_action">Select backup</string>
     <string name="fuel_backup_restored">Backup restored successfully</string>
-    <string name="fuel_backup_restore_failed">This is not a valid AA Torque backup</string>
+    <string name="fuel_backup_restore_failed">This is not a valid Huno backup</string>
     <string name="daily_summary_exported">Daily summary updated in Drive</string>
     <string name="daily_summary_export_failed">There are no completed trips to summarize yet</string>
     <string name="tank_report_exported">Tank-period report saved in Drive</string>

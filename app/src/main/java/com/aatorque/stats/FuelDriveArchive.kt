@@ -235,7 +235,7 @@ object FuelDriveArchive {
             }
             true
         } catch (error: Exception) {
-            Timber.e(error, "Unable to restore AA Torque backup")
+            Timber.e(error, "Unable to restore Huno backup")
             false
         }
     }
@@ -277,7 +277,7 @@ object FuelDriveArchive {
         paint.textAlign = Paint.Align.LEFT
         paint.color = Color.WHITE
         paint.textSize = 46f
-        canvas.drawText("AA TORQUE · RESUMEN DE HOY", 85f, 115f, paint)
+        canvas.drawText("HUNO · RESUMEN DE HOY", 85f, 115f, paint)
         paint.color = Color.rgb(255, 199, 0)
         paint.textSize = 29f
         canvas.drawText(SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date()).uppercase(Locale.getDefault()), 85f, 162f, paint)

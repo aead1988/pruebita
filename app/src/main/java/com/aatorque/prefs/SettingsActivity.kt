@@ -509,7 +509,7 @@ class SettingsActivity : AppCompatActivity(),
     private fun logsToClipboard() {
         val logs = (application as App).logTree.logToString()
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("AA Torque Log", logs.joinToString("\n")))
+        clipboard.setPrimaryClip(ClipData.newPlainText("Huno Log", logs.joinToString("\n")))
     }
 
 
