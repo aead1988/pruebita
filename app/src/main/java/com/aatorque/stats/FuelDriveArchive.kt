@@ -18,7 +18,8 @@ import java.util.Date
 import java.util.Locale
 
 data class ArchivedTrip(
-    val timestamp: Long,
+    val startedAt: Long,
+    val endedAt: Long,
     val distanceKm: Double,
     val fuelLiters: Double,
     val elapsedSeconds: Double,
@@ -29,9 +30,22 @@ data class ArchivedTrip(
     val gallons: Double get() = fuelLiters / FuelEconomySnapshot.US_GALLON_LITERS
     val averageKmPerGallon: Double?
         get() = if (fuelLiters > 0.0001) distanceKm / fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS else null
+    val averageSpeedKph: Double?
+        get() = if (elapsedSeconds > 1.0) distanceKm / (elapsedSeconds / 3_600.0) else null
+    val classification: String
+        get() {
+            val average = averageKmPerGallon ?: return "Viaje sin puntuación"
+            return when {
+                average >= 48.0 -> "Viaje eficiente"
+                average >= 42.0 -> "Viaje normal"
+                else -> "Viaje poco eficiente"
+            }
+        }
 
     fun toJson(): JSONObject = JSONObject()
-        .put("timestamp", timestamp)
+        .put("timestamp", endedAt) // Kept for compatibility with versions 2.0.53-2.0.55.
+        .put("startedAt", startedAt)
+        .put("endedAt", endedAt)
         .put("distanceKm", distanceKm)
         .put("fuelLiters", fuelLiters)
         .put("elapsedSeconds", elapsedSeconds)
@@ -40,15 +54,22 @@ data class ArchivedTrip(
         .put("awardTitle", awardTitle)
 
     companion object {
-        fun fromJson(value: JSONObject): ArchivedTrip = ArchivedTrip(
-            timestamp = value.optLong("timestamp"),
-            distanceKm = value.optDouble("distanceKm"),
-            fuelLiters = value.optDouble("fuelLiters"),
-            elapsedSeconds = value.optDouble("elapsedSeconds"),
-            fuelCost = value.optDouble("fuelCost"),
-            awardId = value.optString("awardId", ""),
-            awardTitle = value.optString("awardTitle", "")
-        )
+        fun fromJson(value: JSONObject): ArchivedTrip {
+            val elapsedSeconds = value.optDouble("elapsedSeconds")
+            val legacyTimestamp = value.optLong("timestamp", System.currentTimeMillis())
+            val endedAt = value.optLong("endedAt", legacyTimestamp)
+            val inferredStart = endedAt - (elapsedSeconds * 1_000.0).toLong().coerceAtLeast(0L)
+            return ArchivedTrip(
+                startedAt = value.optLong("startedAt", inferredStart),
+                endedAt = endedAt,
+                distanceKm = value.optDouble("distanceKm"),
+                fuelLiters = value.optDouble("fuelLiters"),
+                elapsedSeconds = elapsedSeconds,
+                fuelCost = value.optDouble("fuelCost"),
+                awardId = value.optString("awardId", ""),
+                awardTitle = value.optString("awardTitle", "")
+            )
+        }
     }
 }
 
@@ -99,9 +120,10 @@ object FuelDriveArchive {
         journeyStartedAt: Long
     ): DailyCardResult? {
         if (journey.distanceKm < 0.05 && journey.elapsedSeconds < 60.0) return null
-        val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context) ?: return null
+        val endedAt = System.currentTimeMillis()
+        val startedAt = journeyStartedAt.coerceAtMost(endedAt)
         val signature = listOf(
-            journeyStartedAt / 60_000L,
+            startedAt / 60_000L,
             (journey.distanceKm * 100).toLong(),
             (journey.fuelLiters * 10_000).toLong(),
             journey.elapsedSeconds.toLong()
@@ -111,7 +133,8 @@ object FuelDriveArchive {
             val price = fuelPrice(context)
             FuelTripHistoryStore(context).add(
                 ArchivedTrip(
-                    timestamp = System.currentTimeMillis(),
+                    startedAt = startedAt,
+                    endedAt = endedAt,
                     distanceKm = journey.distanceKm,
                     fuelLiters = journey.fuelLiters,
                     elapsedSeconds = journey.elapsedSeconds,
@@ -120,6 +143,7 @@ object FuelDriveArchive {
             )
             preferences.edit().putString(KEY_LAST_SIGNATURE, signature).apply()
         }
+        val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context) ?: return null
         return writeDailyCard(context, treeUri)
     }
 
@@ -139,13 +163,17 @@ object FuelDriveArchive {
         return try {
             val endedAt = System.currentTimeMillis()
             val history = FuelTripHistoryStore(context).load()
-                .filter { it.timestamp in periodStartedAt..endedAt }
+                .filter { it.endedAt in periodStartedAt..endedAt }
                 .toMutableList()
-            val currentAlreadyArchived = history.any { it.timestamp >= currentJourneyStartedAt }
+            val currentAlreadyArchived = history.any {
+                it.startedAt == currentJourneyStartedAt ||
+                    (it.startedAt >= currentJourneyStartedAt && it.endedAt <= endedAt)
+            }
             if (!currentAlreadyArchived && (currentJourney.distanceKm >= 0.05 || currentJourney.elapsedSeconds >= 60.0)) {
                 history.add(
                     ArchivedTrip(
-                        timestamp = endedAt,
+                        startedAt = currentJourneyStartedAt.coerceAtMost(endedAt),
+                        endedAt = endedAt,
                         distanceKm = currentJourney.distanceKm,
                         fuelLiters = currentJourney.fuelLiters,
                         elapsedSeconds = currentJourney.elapsedSeconds,
@@ -215,8 +243,8 @@ object FuelDriveArchive {
     private fun writeDailyCard(context: Context, treeUri: Uri): DailyCardResult? {
         val dayKey = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val trips = FuelTripHistoryStore(context).load().filter {
-            SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(it.timestamp)) == dayKey
-        }
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(it.endedAt)) == dayKey
+        }.sortedBy { it.startedAt }
         if (trips.isEmpty()) return null
         return try {
             val root = treeDocument(treeUri)
@@ -225,9 +253,8 @@ object FuelDriveArchive {
             val existing = findChild(context, treeUri, cards, name, "image/png")
             val uri = existing ?: DocumentsContract.createDocument(context.contentResolver, cards, "image/png", name)
                 ?: return null
-            val written = context.contentResolver.openOutputStream(uri, "w")?.use {
-                it.write(dailySummaryCard(trips))
-            } != null
+            val card = dailySummaryCard(trips)
+            val written = openReplacingOutput(context, uri)?.use { it.write(card) } != null
             if (written) DailyCardResult(uri, trips.size) else null
         } catch (error: Exception) {
             Timber.e(error, "Unable to update daily summary card")
@@ -236,8 +263,8 @@ object FuelDriveArchive {
     }
 
     private fun dailySummaryCard(trips: List<ArchivedTrip>): ByteArray {
-        val width = 1400
-        val height = maxOf(900, 430 + trips.size * 86)
+        val width = 2200
+        val height = maxOf(900, 450 + trips.size * 96)
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -262,7 +289,7 @@ object FuelDriveArchive {
         val totalCost = trips.sumOf { it.fuelCost }
         val totalSeconds = trips.sumOf { it.elapsedSeconds }
         paint.color = Color.WHITE
-        paint.textSize = 31f
+        paint.textSize = 30f
         canvas.drawText(
             "${number(totalDistance)} km    ${number(totalGallons)} gal    ${numberOrDash(totalAverage)} km/gal    \$${number(totalCost)}    ${duration(totalSeconds)}",
             85f,
@@ -273,26 +300,33 @@ object FuelDriveArchive {
         paint.color = Color.LTGRAY
         paint.textSize = 22f
         canvas.drawText("VIAJE", 85f, 282f, paint)
-        canvas.drawText("HORA", 235f, 282f, paint)
-        canvas.drawText("DISTANCIA", 420f, 282f, paint)
-        canvas.drawText("GALONES", 670f, 282f, paint)
-        canvas.drawText("PROMEDIO", 880f, 282f, paint)
-        canvas.drawText("COSTO", 1110f, 282f, paint)
-        canvas.drawText("TIEMPO", 1260f, 282f, paint)
+        canvas.drawText("INICIO", 220f, 282f, paint)
+        canvas.drawText("FIN", 345f, 282f, paint)
+        canvas.drawText("DISTANCIA", 470f, 282f, paint)
+        canvas.drawText("GALONES", 680f, 282f, paint)
+        canvas.drawText("RENDIMIENTO", 870f, 282f, paint)
+        canvas.drawText("VEL. PROM.", 1140f, 282f, paint)
+        canvas.drawText("COSTO", 1360f, 282f, paint)
+        canvas.drawText("DURACIÓN", 1510f, 282f, paint)
+        canvas.drawText("PUNTUACIÓN", 1700f, 282f, paint)
 
         trips.forEachIndexed { index, trip ->
-            val y = 340f + index * 86f
+            val y = 340f + index * 96f
             paint.color = if (index % 2 == 0) Color.rgb(35, 39, 48) else Color.rgb(28, 32, 40)
             canvas.drawRoundRect(RectF(72f, y - 43f, width - 72f, y + 28f), 14f, 14f, paint)
             paint.color = Color.WHITE
             paint.textSize = 26f
             canvas.drawText("Viaje ${index + 1}", 85f, y, paint)
-            canvas.drawText(SimpleDateFormat("HH:mm", Locale.US).format(Date(trip.timestamp)), 235f, y, paint)
-            canvas.drawText("${number(trip.distanceKm)} km", 420f, y, paint)
-            canvas.drawText("${number(trip.gallons)} gal", 670f, y, paint)
-            canvas.drawText("${numberOrDash(trip.averageKmPerGallon)} km/gal", 880f, y, paint)
-            canvas.drawText("\$${number(trip.fuelCost)}", 1110f, y, paint)
-            canvas.drawText(duration(trip.elapsedSeconds), 1260f, y, paint)
+            canvas.drawText(time(trip.startedAt), 220f, y, paint)
+            canvas.drawText(time(trip.endedAt), 345f, y, paint)
+            canvas.drawText("${number(trip.distanceKm)} km", 470f, y, paint)
+            canvas.drawText("${number(trip.gallons)} gal", 680f, y, paint)
+            canvas.drawText("${numberOrDash(trip.averageKmPerGallon)} km/gal", 870f, y, paint)
+            canvas.drawText("${numberOrDash(trip.averageSpeedKph)} km/h", 1140f, y, paint)
+            canvas.drawText("\$${number(trip.fuelCost)}", 1360f, y, paint)
+            canvas.drawText(duration(trip.elapsedSeconds), 1510f, y, paint)
+            paint.color = classificationColor(trip.classification)
+            canvas.drawText(trip.classification, 1700f, y, paint)
         }
         paint.color = Color.LTGRAY
         paint.textSize = 22f
@@ -313,18 +347,20 @@ object FuelDriveArchive {
     ): String = buildString {
         val days = ((endedAt - startedAt).coerceAtLeast(0L) / 86_400_000L) + 1L
         append('\uFEFF')
-        append("tipo,numero,inicio,fin,dias,distance_km,galones_usados,promedio_km_por_galon,costo_usd,duracion_minutos\r\n")
+        append("tipo,numero,inicio,fin,dias,distance_km,galones_usados,promedio_km_por_galon,velocidad_promedio_kmh,costo_usd,duracion_minutos,clasificacion\r\n")
         append("RESUMEN_TANQUEADA,,")
         append(dateTime(startedAt)).append(',').append(dateTime(endedAt)).append(',').append(days).append(',')
         append(number(totals.distanceKm)).append(',').append(number(totals.fuelGallons)).append(',')
-        append(numberOrDash(totals.averageKmPerGallon)).append(',')
+        append(numberOrDash(totals.averageKmPerGallon)).append(',').append(numberOrDash(totals.averageSpeedKph)).append(',')
         append(number(totals.fuelGallons * fuelPrice(context))).append(',')
-        append(number(totals.elapsedSeconds / 60.0)).append("\r\n")
+        append(number(totals.elapsedSeconds / 60.0)).append(',').append("\r\n")
         trips.forEachIndexed { index, trip ->
-            append("VIAJE,").append(index + 1).append(',').append(dateTime(trip.timestamp)).append(",,,")
+            append("VIAJE,").append(index + 1).append(',')
+                .append(dateTime(trip.startedAt)).append(',').append(dateTime(trip.endedAt)).append(",,")
             append(number(trip.distanceKm)).append(',').append(number(trip.gallons)).append(',')
-            append(numberOrDash(trip.averageKmPerGallon)).append(',').append(number(trip.fuelCost)).append(',')
-            append(number(trip.elapsedSeconds / 60.0)).append("\r\n")
+            append(numberOrDash(trip.averageKmPerGallon)).append(',').append(numberOrDash(trip.averageSpeedKph)).append(',')
+                .append(number(trip.fuelCost)).append(',')
+            append(number(trip.elapsedSeconds / 60.0)).append(',').append(trip.classification).append("\r\n")
         }
     }
 
@@ -332,6 +368,13 @@ object FuelDriveArchive {
         .getString("fuelPricePerGallon", "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
 
     private fun dateTime(value: Long): String = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(value))
+    private fun time(value: Long): String = SimpleDateFormat("HH:mm", Locale.US).format(Date(value))
+    private fun classificationColor(value: String): Int = when (value) {
+        "Viaje eficiente" -> Color.rgb(76, 217, 100)
+        "Viaje normal" -> Color.rgb(255, 199, 0)
+        "Viaje poco eficiente" -> Color.rgb(255, 107, 107)
+        else -> Color.LTGRAY
+    }
     private fun duration(seconds: Double): String {
         val minutes = (seconds / 60.0).toLong().coerceAtLeast(0L)
         return String.format(Locale.US, "%d:%02d h", minutes / 60L, minutes % 60L)
@@ -373,6 +416,12 @@ object FuelDriveArchive {
         val uri = DocumentsContract.createDocument(context.contentResolver, parent, mime, name) ?: return null
         val written = context.contentResolver.openOutputStream(uri, "w")?.bufferedWriter(Charsets.UTF_8)?.use { it.write(value) } != null
         return if (written) uri else null
+    }
+
+    private fun openReplacingOutput(context: Context, uri: Uri) = try {
+        context.contentResolver.openOutputStream(uri, "rwt")
+    } catch (_: Exception) {
+        context.contentResolver.openOutputStream(uri, "w")
     }
 
     private const val SCHEMA_VERSION = 1

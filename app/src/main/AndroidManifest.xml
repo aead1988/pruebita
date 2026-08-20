@@ -17,6 +17,7 @@
 
     <queries>
         <package android:name="org.prowl.torque" />
+        <package android:name="com.spotify.music" />
     </queries>
 
     <application

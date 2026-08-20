@@ -127,6 +127,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_waiting)))
         publishPlaybackState()
         connectToTorque()
+        scheduleSpotifyAutoPlay()
+        scheduleDailyCardRecovery()
     }
 
     override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot {
@@ -166,6 +168,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
             )
             lastSampleNanos = System.nanoTime()
             executor.execute(::discoverPidsAndStart)
+            scheduleSpotifyAutoPlay()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -613,6 +616,54 @@ class FuelEconomyMediaService : MediaBrowserService() {
         }
     }
 
+    /**
+     * Resumes Spotify after Android Auto and its media sessions have finished starting.
+     * Several attempts are intentional: Spotify is often registered a few seconds after
+     * AA Torque's MediaBrowserService is created.
+     */
+    private fun scheduleSpotifyAutoPlay() {
+        SPOTIFY_AUTO_PLAY_DELAYS_SECONDS.forEach { delaySeconds ->
+            try {
+                executor.schedule({ resumeSpotifyPlayback() }, delaySeconds, TimeUnit.SECONDS)
+            } catch (_: java.util.concurrent.RejectedExecutionException) {
+                // The service is already shutting down.
+            }
+        }
+    }
+
+    private fun resumeSpotifyPlayback(): Boolean {
+        if (!NotiService.isNotificationAccessEnabled(this)) return false
+        return try {
+            val manager = getSystemService(MediaSessionManager::class.java)
+            val listener = ComponentName(this, NotiService::class.java)
+            val spotify = manager.getActiveSessions(listener)
+                .firstOrNull { it.packageName == SPOTIFY_PACKAGE } ?: return false
+            if (spotify.playbackState?.state != PlaybackState.STATE_PLAYING) {
+                spotify.transportControls.play()
+                Timber.i("Requested Spotify playback after Android Auto start")
+            }
+            true
+        } catch (error: Exception) {
+            Timber.w(error, "Unable to resume Spotify automatically")
+            false
+        }
+    }
+
+    /** Rewrites a pending daily card when Drive was temporarily unavailable. */
+    private fun scheduleDailyCardRecovery() {
+        DAILY_CARD_RECOVERY_DELAYS_SECONDS.forEach { delaySeconds ->
+            try {
+                executor.schedule(
+                    { FuelDriveArchive.exportDailySummary(this) },
+                    delaySeconds,
+                    TimeUnit.SECONDS
+                )
+            } catch (_: java.util.concurrent.RejectedExecutionException) {
+                // The service is already shutting down.
+            }
+        }
+    }
+
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
             PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
@@ -729,6 +780,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         val result = FuelDriveArchive.archiveJourneyAndUpdateDailyCard(this, journeySnapshot, journeyStartedAt)
         if (result != null) {
             Timber.i("Updated daily card with %d trips", result.tripCount)
+        } else if (MonthlyFuelCsvExporter.configuredDirectory(this) != null) {
+            scheduleDailyCardRecovery()
         }
     }
 
@@ -884,5 +937,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val PREF_SPOTIFY_ARTWORK = "spotifyArtworkEnabled"
         private const val SPOTIFY_PACKAGE = "com.spotify.music"
         private const val MAX_ARTWORK_EDGE_PX = 384
+        private val SPOTIFY_AUTO_PLAY_DELAYS_SECONDS = longArrayOf(1L, 4L, 10L, 20L)
+        private val DAILY_CARD_RECOVERY_DELAYS_SECONDS = longArrayOf(5L, 30L)
     }
 }
