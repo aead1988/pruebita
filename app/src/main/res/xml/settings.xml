@@ -70,7 +70,7 @@
             android:title="@string/fuel_modules_title"
             app:fragment="com.aatorque.prefs.FuelModuleSettingsFragment" />
         <EditTextPreference
-            android:defaultValue="3.00"
+            android:defaultValue="3.24"
             android:inputType="numberDecimal"
             android:key="fuelPricePerGallon"
             android:summary="@string/fuel_price_per_gallon_summary"

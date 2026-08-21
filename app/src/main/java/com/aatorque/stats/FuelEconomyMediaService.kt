@@ -94,7 +94,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 }
 
                 override fun onSkipToNext() {
-                    forwardSpotifyMediaCommand(KeyEvent.KEYCODE_MEDIA_NEXT)
+                    selectNextModule()
                 }
 
                 override fun onSkipToPrevious() {
@@ -142,6 +142,9 @@ class FuelEconomyMediaService : MediaBrowserService() {
                         ACTION_PRICE_PLUS_TEN -> adjustPendingFuelPrice(0.10)
                     }
                 }
+            })
+            setExtras(Bundle().apply {
+                putBoolean(SESSION_EXTRAS_KEY_SLOT_RESERVATION_SKIP_TO_PREVIOUS, true)
             })
             isActive = true
         }
@@ -504,7 +507,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun tripText(value: FuelEconomySnapshot): DisplayText {
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val price = preferences.getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull() ?: 3.0
+        val price = preferences.getString(PREF_FUEL_PRICE, "3.24")?.toDoubleOrNull() ?: 3.24
         val tankGallons = preferences.getString(PREF_TANK_GALLONS, "11.90")?.toDoubleOrNull() ?: 11.9
         val remainingGallons = telemetry.fuelLevelPercent?.let { tankGallons * it.coerceIn(0.0, 100.0) / 100.0 }
         val averageKmPerGallon = value.averageKmPerGallon
@@ -640,7 +643,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun fuelPricePerGallon(): Double = PreferenceManager.getDefaultSharedPreferences(this)
-        .getString(PREF_FUEL_PRICE, "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
+        .getString(PREF_FUEL_PRICE, "3.24")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.24
 
     private fun forwardSpotifyMediaCommand(keyCode: Int): Boolean {
         if (!NotiService.isNotificationAccessEnabled(this)) return false
@@ -773,7 +776,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
-            PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID
+            PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID or
+            (if (tankPriceEntryMode) 0L else PlaybackState.ACTION_SKIP_TO_NEXT)
         val builder = PlaybackState.Builder()
             .setActions(actions)
             .setState(
@@ -792,7 +796,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
             return
         }
         builder
-            .addCustomAction(ACTION_NEXT_MODE, getString(R.string.fuel_media_next_mode), R.drawable.arrow_forward)
             .addCustomAction(ACTION_TANK_FILLED, getString(R.string.fuel_media_tank_filled), R.drawable.ic_fuel)
             .addCustomAction(
                 ACTION_EXPORT_MONTHLY_CSV,
@@ -1088,6 +1091,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val ACTION_PRICE_PLUS_TEN = "com.aatorque.stats.action.PRICE_PLUS_TEN"
         private const val MEDIA_ROOT_ID = "aa_torque_modes_root"
         private const val MEDIA_ID_TANK_PRICE = "huno_tank_price"
+        private const val SESSION_EXTRAS_KEY_SLOT_RESERVATION_SKIP_TO_PREVIOUS =
+            "android.media.playback.ALWAYS_RESERVE_SPACE_FOR.ACTION_SKIP_TO_PREVIOUS"
         private const val SAMPLE_INTERVAL_MS = 1_000L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
         private const val MAX_SAMPLE_GAP_NANOS = 5_000_000_000L

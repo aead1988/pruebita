@@ -384,7 +384,7 @@ object FuelDriveArchive {
     }
 
     private fun fuelPrice(context: Context): Double = PreferenceManager.getDefaultSharedPreferences(context)
-        .getString("fuelPricePerGallon", "3.00")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.0
+        .getString("fuelPricePerGallon", "3.24")?.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 3.24
 
     private fun dateTime(value: Long): String = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(value))
     private fun time(value: Long): String = SimpleDateFormat("HH:mm", Locale.US).format(Date(value))
