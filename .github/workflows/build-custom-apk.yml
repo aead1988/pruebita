@@ -32,11 +32,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Huno-2.0.66-black-logo.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/Huno-2.0.67-safe-logo.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Huno-2.0.66-black-logo
-          path: app/build/outputs/apk/release/Huno-2.0.66-black-logo.apk
+          name: Huno-2.0.67-safe-logo
+          path: app/build/outputs/apk/release/Huno-2.0.67-safe-logo.apk
           if-no-files-found: error
