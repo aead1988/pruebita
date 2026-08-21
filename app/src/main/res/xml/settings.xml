@@ -83,6 +83,13 @@
             android:summary="@string/fuel_tank_gallons_summary"
             android:title="@string/fuel_tank_gallons_title"
             app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="60"
+            android:inputType="number"
+            android:key="tripPauseMergeMinutes"
+            android:summary="@string/trip_pause_merge_summary"
+            android:title="@string/trip_pause_merge_title"
+            app:useSimpleSummaryProvider="true" />
         <Preference
             android:key="resetFuelTrip"
             android:persistent="false"

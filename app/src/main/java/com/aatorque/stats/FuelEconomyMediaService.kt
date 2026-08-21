@@ -182,13 +182,19 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private val torqueConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             torqueService = ITorqueService.Stub.asInterface(binder)
-            journeyStartedAt = System.currentTimeMillis()
+            val connectedAt = System.currentTimeMillis()
+            val resumedJourney = FuelDriveArchive.resumableJourney(this@FuelEconomyMediaService, connectedAt)
+            journeyStartedAt = resumedJourney?.startedAt ?: connectedAt
             journeySnapshot = FuelEconomySnapshot(
-                0.0,
-                0.0,
+                distanceKm = resumedJourney?.distanceKm ?: 0.0,
+                fuelLiters = resumedJourney?.fuelLiters ?: 0.0,
+                elapsedSeconds = resumedJourney?.elapsedSeconds ?: 0.0,
                 connected = true,
                 status = getString(R.string.fuel_media_waiting)
             )
+            if (resumedJourney != null) {
+                Timber.i("Resumed journey after a short stop of %d seconds", (connectedAt - resumedJourney.endedAt) / 1_000L)
+            }
             lastSampleNanos = System.nanoTime()
             executor.execute(::discoverPidsAndStart)
             scheduleSpotifyAutoPlay()
@@ -793,7 +799,6 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 getString(R.string.fuel_media_export_csv),
                 R.drawable.baseline_file_download_24
             )
-            .addCustomAction(ACTION_RESET_TRIP, getString(R.string.fuel_media_reset), R.drawable.ic_distance)
         mediaSession.setPlaybackState(builder.build())
     }
 

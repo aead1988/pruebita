@@ -41,6 +41,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var darkenArtPref: SeekBarPreference
     lateinit var blurArtPref: SeekBarPreference
     lateinit var resetFuelTripPref: Preference
+    lateinit var tripPauseMergePref: EditTextPreference
     lateinit var exportMonthlyHistoryPref: Preference
     lateinit var monthlyHistoryLocationPref: Preference
     lateinit var restoreFuelBackupPref: Preference
@@ -60,6 +61,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         blurArtPref = findPreference("blurArtwork")!!
         darkenArtPref = findPreference("darkenArtwork")!!
         resetFuelTripPref = findPreference("resetFuelTrip")!!
+        tripPauseMergePref = findPreference("tripPauseMergeMinutes")!!
         exportMonthlyHistoryPref = findPreference("exportMonthlyHistoryCsv")!!
         monthlyHistoryLocationPref = findPreference("monthlyHistoryLocation")!!
         restoreFuelBackupPref = findPreference("restoreFuelBackup")!!
@@ -200,6 +202,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         numScreensPref.setOnBindEditTextListener {
             it.inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        tripPauseMergePref.setOnBindEditTextListener {
+            it.inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        tripPauseMergePref.setOnPreferenceChangeListener { _, newValue ->
+            (newValue as String).toIntOrNull()?.let { it in 0..360 } == true
         }
 
         lifecycleScope.launch {

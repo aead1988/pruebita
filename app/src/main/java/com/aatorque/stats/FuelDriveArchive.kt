@@ -82,6 +82,14 @@ class FuelTripHistoryStore(context: Context) {
     }
 
     @Synchronized
+    fun upsert(trip: ArchivedTrip) {
+        val values = load().toMutableList()
+        val existingIndex = values.indexOfLast { it.startedAt == trip.startedAt }
+        if (existingIndex >= 0) values[existingIndex] = trip else values.add(trip)
+        write(values.takeLast(MAX_TRIPS))
+    }
+
+    @Synchronized
     fun load(): List<ArchivedTrip> = try {
         val array = JSONArray(preferences.getString(KEY_TRIPS, "[]") ?: "[]")
         buildList {
@@ -114,6 +122,20 @@ object FuelDriveArchive {
 
     data class DailyCardResult(val uri: Uri, val tripCount: Int)
 
+    fun resumableJourney(context: Context, now: Long = System.currentTimeMillis()): ArchivedTrip? {
+        val pauseMinutes = PreferenceManager.getDefaultSharedPreferences(context)
+            .getString(PREF_TRIP_PAUSE_MINUTES, DEFAULT_TRIP_PAUSE_MINUTES.toString())
+            ?.toLongOrNull()
+            ?.coerceIn(0L, MAX_TRIP_PAUSE_MINUTES)
+            ?: DEFAULT_TRIP_PAUSE_MINUTES
+        if (pauseMinutes == 0L) return null
+        val latest = FuelTripHistoryStore(context).load().maxByOrNull { it.endedAt } ?: return null
+        val gap = now - latest.endedAt
+        if (gap !in 0..pauseMinutes * 60_000L) return null
+        val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        return latest.takeIf { dayFormat.format(Date(it.endedAt)) == dayFormat.format(Date(now)) }
+    }
+
     fun archiveJourneyAndUpdateDailyCard(
         context: Context,
         journey: FuelEconomySnapshot,
@@ -131,7 +153,7 @@ object FuelDriveArchive {
         val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (preferences.getString(KEY_LAST_SIGNATURE, null) != signature) {
             val price = fuelPrice(context)
-            FuelTripHistoryStore(context).add(
+            FuelTripHistoryStore(context).upsert(
                 ArchivedTrip(
                     startedAt = startedAt,
                     endedAt = endedAt,
@@ -165,21 +187,18 @@ object FuelDriveArchive {
             val history = FuelTripHistoryStore(context).load()
                 .filter { it.endedAt in periodStartedAt..endedAt }
                 .toMutableList()
-            val currentAlreadyArchived = history.any {
-                it.startedAt == currentJourneyStartedAt ||
-                    (it.startedAt >= currentJourneyStartedAt && it.endedAt <= endedAt)
-            }
-            if (!currentAlreadyArchived && (currentJourney.distanceKm >= 0.05 || currentJourney.elapsedSeconds >= 60.0)) {
-                history.add(
-                    ArchivedTrip(
-                        startedAt = currentJourneyStartedAt.coerceAtMost(endedAt),
-                        endedAt = endedAt,
-                        distanceKm = currentJourney.distanceKm,
-                        fuelLiters = currentJourney.fuelLiters,
-                        elapsedSeconds = currentJourney.elapsedSeconds,
-                        fuelCost = currentJourney.fuelGallons * fuelPrice(context)
-                    )
+            if (currentJourney.distanceKm >= 0.05 || currentJourney.elapsedSeconds >= 60.0) {
+                val currentTrip = ArchivedTrip(
+                    startedAt = currentJourneyStartedAt.coerceAtMost(endedAt),
+                    endedAt = endedAt,
+                    distanceKm = currentJourney.distanceKm,
+                    fuelLiters = currentJourney.fuelLiters,
+                    elapsedSeconds = currentJourney.elapsedSeconds,
+                    fuelCost = currentJourney.fuelGallons * fuelPrice(context)
                 )
+                val existingIndex = history.indexOfLast { it.startedAt == currentTrip.startedAt }
+                if (existingIndex >= 0) history[existingIndex] = currentTrip else history.add(currentTrip)
+                FuelTripHistoryStore(context).upsert(currentTrip)
             }
             val root = treeDocument(treeUri)
             val folder = directory(context, treeUri, root, "Tanqueadas") ?: root
@@ -424,5 +443,8 @@ object FuelDriveArchive {
         context.contentResolver.openOutputStream(uri, "w")
     }
 
+    private const val PREF_TRIP_PAUSE_MINUTES = "tripPauseMergeMinutes"
+    private const val DEFAULT_TRIP_PAUSE_MINUTES = 60L
+    private const val MAX_TRIP_PAUSE_MINUTES = 360L
     private const val SCHEMA_VERSION = 1
 }

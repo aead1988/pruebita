@@ -273,6 +273,8 @@
     <string name="fuel_price_per_gallon_summary">Used to estimate the trip cost</string>
     <string name="fuel_tank_gallons_title">Tank capacity in gallons</string>
     <string name="fuel_tank_gallons_summary">Used to estimate the remaining range</string>
+    <string name="trip_pause_merge_title">Short stop duration (minutes)</string>
+    <string name="trip_pause_merge_summary">Stops shorter than this remain part of the same trip. From 0 to 360; 0 disables merging.</string>
     <string name="monthly_history_category">Fuel reports and Drive</string>
     <string name="monthly_history_export_title">Export monthly history CSV</string>
     <string name="monthly_history_export_summary">Saves archived months and the current month for analysis in Excel or Google Sheets</string>
