@@ -45,5 +45,5 @@
     <color name="graphColor2">#aee93d</color>
     <color name="graphColor3">#e9783d</color>
     <color name="transparentBlack">#88000000</color>
-    <color name="huno_icon_background">#00000000</color>
+    <color name="huno_icon_background">#000000</color>
 </resources>
