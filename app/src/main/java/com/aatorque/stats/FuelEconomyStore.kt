@@ -336,6 +336,9 @@ class DailyFuelEconomyStore(context: Context) {
         return value
     }
 
+    @Synchronized
+    fun restore(snapshot: DailyFuelEconomySnapshot) = write(snapshot)
+
     private fun write(snapshot: DailyFuelEconomySnapshot) {
         preferences.edit()
             .putString(KEY_DAY, snapshot.dayKey)
@@ -402,6 +405,9 @@ class WeeklyFuelEconomyStore(context: Context) {
         write(value)
         return value
     }
+
+    @Synchronized
+    fun restore(snapshot: WeeklyFuelEconomySnapshot) = write(snapshot)
 
     private fun write(snapshot: WeeklyFuelEconomySnapshot) {
         preferences.edit()

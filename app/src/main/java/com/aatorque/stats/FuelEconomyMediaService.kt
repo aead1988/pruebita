@@ -911,6 +911,7 @@ class FuelEconomyMediaService : MediaBrowserService() {
         observedResetGeneration = store.resetGeneration()
         snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
         lastSampleNanos = System.nanoTime()
+        FuelDeviceSync.publishIfEnabled(this)
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_tank_filled)))
         publishPlaybackState()
         android.widget.Toast.makeText(applicationContext, R.string.tank_report_exported, android.widget.Toast.LENGTH_LONG).show()

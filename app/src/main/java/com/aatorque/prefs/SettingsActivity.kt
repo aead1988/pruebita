@@ -33,6 +33,7 @@ import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
 import com.aatorque.stats.FuelDriveArchive
+import com.aatorque.stats.FuelSyncScheduler
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.MonthlyFuelCsvExporter
 import com.aatorque.stats.R
@@ -290,6 +291,7 @@ class SettingsActivity : AppCompatActivity(),
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     )
                     MonthlyFuelCsvExporter.setDirectory(applicationContext, uri)
+                    FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
                     Toast.makeText(this, R.string.monthly_history_location_saved, Toast.LENGTH_SHORT).show()
                 } catch (error: SecurityException) {
                     Timber.e(error, "Unable to persist monthly report directory permission")

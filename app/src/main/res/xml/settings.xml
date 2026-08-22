@@ -150,6 +150,33 @@
             android:title="@string/fuel_backup_restore_title" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/fuel_sync_category">
+        <ListPreference
+            android:defaultValue="disabled"
+            android:entries="@array/fuel_sync_role_entries"
+            android:entryValues="@array/fuel_sync_role_values"
+            android:key="fuelSyncRole"
+            android:summary="@string/fuel_sync_role_summary"
+            android:title="@string/fuel_sync_role_title"
+            app:useSimpleSummaryProvider="true" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="fuelSyncAutomatic"
+            android:summary="@string/fuel_sync_automatic_summary"
+            android:title="@string/fuel_sync_automatic_title" />
+        <Preference
+            android:key="fuelSyncNow"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_now_summary"
+            android:title="@string/fuel_sync_now_title" />
+        <Preference
+            android:key="fuelSyncStatus"
+            android:persistent="false"
+            android:selectable="false"
+            android:summary="@string/fuel_sync_never"
+            android:title="@string/fuel_sync_status_title" />
+    </PreferenceCategory>
+
     <PreferenceCategory
         android:singleLineTitle="false"
         android:title="@string/dashboards"

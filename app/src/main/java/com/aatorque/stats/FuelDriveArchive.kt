@@ -165,8 +165,10 @@ object FuelDriveArchive {
             )
             preferences.edit().putString(KEY_LAST_SIGNATURE, signature).apply()
         }
-        val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context) ?: return null
-        return writeDailyCard(context, treeUri)
+        val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context)
+        val result = treeUri?.let { writeDailyCard(context, it) }
+        FuelDeviceSync.publishIfEnabled(context)
+        return result
     }
 
     fun exportDailySummary(context: Context): DailyCardResult? {
@@ -296,7 +298,7 @@ object FuelDriveArchive {
         paint.textAlign = Paint.Align.LEFT
         paint.color = Color.WHITE
         paint.textSize = 46f
-        canvas.drawText("HUNO · RESUMEN DE HOY", 85f, 115f, paint)
+        canvas.drawText("MY HUNO · RESUMEN DE HOY", 85f, 115f, paint)
         paint.color = Color.rgb(255, 199, 0)
         paint.textSize = 29f
         canvas.drawText(SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date()).uppercase(Locale.getDefault()), 85f, 162f, paint)

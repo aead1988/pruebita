@@ -12,27 +12,7 @@ class FuelModuleStore(context: Context) {
     fun modules(): List<FuelModule> {
         val saved = preferences.getString(KEY_MODULES, null) ?: return defaults()
         return try {
-            val array = JSONArray(saved)
-            buildList {
-                for (index in 0 until array.length()) {
-                    val item = array.getJSONObject(index)
-                    val metrics = item.optJSONArray("metrics") ?: JSONArray()
-                    add(
-                        FuelModule(
-                            id = item.getString("id"),
-                            name = item.optString("name"),
-                            builtIn = item.optBoolean("builtIn"),
-                            enabled = item.optBoolean("enabled", true),
-                            metrics = buildList {
-                                for (metricIndex in 0 until metrics.length()) {
-                                    runCatching { FuelModuleMetric.valueOf(metrics.getString(metricIndex)) }
-                                        .getOrNull()?.let(::add)
-                                }
-                            }
-                        )
-                    )
-                }
-            }.ifEmpty { defaults() }
+            parse(JSONArray(saved)).ifEmpty { defaults() }
         } catch (_: Exception) {
             defaults()
         }
@@ -77,10 +57,37 @@ class FuelModuleStore(context: Context) {
 
     fun restoreDefaults() = save(defaults())
 
-    private fun save(modules: List<FuelModule>) {
-        val array = JSONArray()
+    fun exportJson(): JSONArray = serialize(modules())
+
+    fun restore(array: JSONArray) {
+        val restored = runCatching { parse(array) }.getOrDefault(emptyList())
+        if (restored.isNotEmpty()) save(restored)
+    }
+
+    private fun parse(array: JSONArray): List<FuelModule> = buildList {
+        for (index in 0 until array.length()) {
+            val item = array.getJSONObject(index)
+            val metrics = item.optJSONArray("metrics") ?: JSONArray()
+            add(
+                FuelModule(
+                    id = item.getString("id"),
+                    name = item.optString("name"),
+                    builtIn = item.optBoolean("builtIn"),
+                    enabled = item.optBoolean("enabled", true),
+                    metrics = buildList {
+                        for (metricIndex in 0 until metrics.length()) {
+                            runCatching { FuelModuleMetric.valueOf(metrics.getString(metricIndex)) }
+                                .getOrNull()?.let(::add)
+                        }
+                    }
+                )
+            )
+        }
+    }
+
+    private fun serialize(modules: List<FuelModule>): JSONArray = JSONArray().apply {
         modules.forEach { module ->
-            array.put(JSONObject().apply {
+            put(JSONObject().apply {
                 put("id", module.id)
                 put("name", module.name)
                 put("builtIn", module.builtIn)
@@ -88,7 +95,10 @@ class FuelModuleStore(context: Context) {
                 put("metrics", JSONArray(module.metrics.map { it.name }))
             })
         }
-        preferences.edit().putString(KEY_MODULES, array.toString()).apply()
+    }
+
+    private fun save(modules: List<FuelModule>) {
+        preferences.edit().putString(KEY_MODULES, serialize(modules).toString()).apply()
     }
 
     private fun defaults(): List<FuelModule> = listOf(

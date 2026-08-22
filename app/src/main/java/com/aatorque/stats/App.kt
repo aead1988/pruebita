@@ -19,6 +19,7 @@ class App : Application() {
         super.onCreate()
         Timber.plant(logTree)
         applyFuelPrice324Once()
+        FuelSyncScheduler.refresh(this, runImmediately = true)
         fixAndroid14Perms()
     }
 
