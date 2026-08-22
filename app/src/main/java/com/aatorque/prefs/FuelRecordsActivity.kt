@@ -1,6 +1,7 @@
 package com.aatorque.prefs
 
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +22,6 @@ import com.aatorque.stats.FuelTripHistoryStore
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.R
 import com.aatorque.stats.WeeklyFuelEconomyStore
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,13 +39,12 @@ class FuelRecordsActivity : AppCompatActivity() {
     private lateinit var tankValues: TextView
     private lateinit var tripCount: TextView
     private lateinit var tripList: LinearLayout
-    private lateinit var syncButton: MaterialButton
+    private lateinit var syncButton: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fuel_records)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = getString(R.string.fuel_records_title)
+        supportActionBar?.hide()
 
         lastSync = findViewById(R.id.recordsLastSync)
         todayValues = bindPeriodCard(R.id.recordsTodayCard, R.string.fuel_records_today)
@@ -56,6 +55,7 @@ class FuelRecordsActivity : AppCompatActivity() {
         tripCount = findViewById(R.id.recordsTripCount)
         tripList = findViewById(R.id.recordsTripList)
         syncButton = findViewById(R.id.recordsSyncButton)
+        findViewById<View>(R.id.recordsBackButton).setOnClickListener { finish() }
         syncButton.setOnClickListener { synchronize(showToast = true) }
     }
 
@@ -135,7 +135,7 @@ class FuelRecordsActivity : AppCompatActivity() {
         tripCount.text = resources.getQuantityString(R.plurals.fuel_records_trip_count, trips.size, trips.size)
         tripList.removeAllViews()
         if (trips.isEmpty()) {
-            tripList.addView(textView(getString(R.string.fuel_records_empty), 16f, Color.LTGRAY).apply {
+            tripList.addView(textView(getString(R.string.fuel_records_empty), 16f, Color.rgb(95, 96, 101)).apply {
                 setPadding(dp(8), dp(24), dp(8), dp(40))
             })
         } else {
@@ -165,8 +165,8 @@ class FuelRecordsActivity : AppCompatActivity() {
         val card = MaterialCardView(this).apply {
             radius = dp(18).toFloat()
             cardElevation = dp(2).toFloat()
-            setCardBackgroundColor(Color.rgb(24, 27, 33))
-            strokeColor = Color.rgb(55, 60, 70)
+            setCardBackgroundColor(Color.WHITE)
+            strokeColor = Color.rgb(225, 226, 229)
             strokeWidth = dp(1)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -177,13 +177,13 @@ class FuelRecordsActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(16), dp(18), dp(16))
         }
-        body.addView(textView(getString(R.string.fuel_records_trip_number, number), 18f, Color.WHITE).apply {
+        body.addView(textView(getString(R.string.fuel_records_trip_number, number), 18f, Color.rgb(9, 9, 9)).apply {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
         val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(trip.startedAt))
         val start = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.startedAt))
         val end = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.endedAt))
-        body.addView(textView(getString(R.string.fuel_records_trip_time, date, start, end), 14f, Color.LTGRAY))
+        body.addView(textView(getString(R.string.fuel_records_trip_time, date, start, end), 14f, Color.rgb(112, 113, 118)))
         body.addView(textView(
             getString(
                 R.string.fuel_records_trip_values,
@@ -194,10 +194,15 @@ class FuelRecordsActivity : AppCompatActivity() {
                 duration(trip.elapsedSeconds)
             ),
             15f,
-            Color.WHITE
+            Color.rgb(32, 33, 38)
         ).apply { setPadding(0, dp(10), 0, dp(8)) })
         body.addView(textView(trip.classification, 15f, classificationColor(trip.classification)).apply {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
+            background = GradientDrawable().apply {
+                setColor(classificationBackground(trip.classification))
+                cornerRadius = dp(16).toFloat()
+            }
+            setPadding(dp(11), dp(6), dp(11), dp(6))
         })
         card.addView(body)
         return card
@@ -210,9 +215,15 @@ class FuelRecordsActivity : AppCompatActivity() {
     }
 
     private fun classificationColor(value: String): Int = when (value) {
-        "Viaje eficiente" -> Color.rgb(76, 217, 100)
-        "Viaje poco eficiente" -> Color.rgb(255, 107, 107)
-        else -> Color.rgb(255, 199, 0)
+        "Viaje eficiente" -> Color.rgb(38, 104, 45)
+        "Viaje poco eficiente" -> Color.rgb(150, 46, 46)
+        else -> Color.rgb(85, 73, 11)
+    }
+
+    private fun classificationBackground(value: String): Int = when (value) {
+        "Viaje eficiente" -> Color.rgb(218, 255, 190)
+        "Viaje poco eficiente" -> Color.rgb(255, 224, 224)
+        else -> Color.rgb(217, 255, 67)
     }
 
     private fun duration(seconds: Double): String {

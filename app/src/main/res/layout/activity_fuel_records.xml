@@ -3,48 +3,72 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0C10"
+    android:background="#ECEDEF"
+    android:clipToPadding="false"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:paddingStart="20dp"
+        android:paddingTop="22dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="40dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/fuel_records_heading"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/recordsBackButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/viewer_circle_button"
+                android:gravity="center"
+                android:text="‹"
+                android:textColor="#090909"
+                android:textSize="34sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:text="@string/fuel_records_heading"
+                android:textColor="#090909"
+                android:textSize="29sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/recordsSyncButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/viewer_black_button"
+                android:gravity="center"
+                android:text="↻"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/recordsLastSync"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="#B8BDC7"
-            android:textSize="14sp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/recordsSyncButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/fuel_sync_now_title"
-            android:textColor="#111111"
-            app:backgroundTint="#FFC700"
-            app:cornerRadius="14dp" />
+            android:layout_marginStart="64dp"
+            android:layout_marginTop="-9dp"
+            android:textColor="#74757A"
+            android:textSize="13sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:text="@string/fuel_records_summary"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:layout_marginTop="30dp"
+            android:text="@string/fuel_records_overview_title"
+            android:textColor="#090909"
+            android:textSize="21sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -53,9 +77,9 @@
             android:layout_marginTop="12dp"
             android:baselineAligned="false"
             android:orientation="horizontal">
-            <include layout="@layout/item_fuel_period" android:id="@+id/recordsTodayCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+            <include android:id="@+id/recordsTodayCard" layout="@layout/item_fuel_period" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
             <Space android:layout_width="12dp" android:layout_height="1dp" />
-            <include layout="@layout/item_fuel_period" android:id="@+id/recordsWeekCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+            <include android:id="@+id/recordsWeekCard" layout="@layout/item_fuel_period" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
         </LinearLayout>
 
         <LinearLayout
@@ -64,9 +88,9 @@
             android:layout_marginTop="12dp"
             android:baselineAligned="false"
             android:orientation="horizontal">
-            <include layout="@layout/item_fuel_period" android:id="@+id/recordsMonthCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+            <include android:id="@+id/recordsMonthCard" layout="@layout/item_fuel_period" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
             <Space android:layout_width="12dp" android:layout_height="1dp" />
-            <include layout="@layout/item_fuel_period" android:id="@+id/recordsYearCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+            <include android:id="@+id/recordsYearCard" layout="@layout/item_fuel_period" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
         </LinearLayout>
 
         <include
@@ -81,8 +105,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textColor="#090909"
+            android:textSize="21sp"
             android:textStyle="bold" />
 
         <LinearLayout

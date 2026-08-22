@@ -109,6 +109,7 @@ class SettingsActivity : AppCompatActivity(),
             object : FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                     super.onFragmentResumed(fm, f)
+                    if (f is ViewerSettingsFragment) supportActionBar?.hide() else supportActionBar?.show()
                     supportActionBar!!.subtitle = when (f) {
                         is SettingsDashboard -> {
                             resources.getString(
