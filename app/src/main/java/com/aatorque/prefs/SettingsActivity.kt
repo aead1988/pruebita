@@ -28,12 +28,14 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
 import com.aatorque.stats.FuelDriveArchive
 import com.aatorque.stats.FuelDeviceSync
+import com.aatorque.stats.FuelSyncRole
 import com.aatorque.stats.FuelSyncScheduler
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.MonthlyFuelCsvExporter
@@ -97,10 +99,8 @@ class SettingsActivity : AppCompatActivity(),
         setContentView(R.layout.activity_settings)
         supportActionBar!!.setDisplayUseLogoEnabled(true)
         if (savedInstanceState == null) {
-            supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.settings_fragment, SettingsFragment())
-                .commit()
+            val role = FuelDeviceSync.role(this)
+            if (role == FuelSyncRole.DISABLED) showInitialRoleDialog() else showRootForRole(role)
         }
         lifecycleScope.launch(Dispatchers.IO) {
             checkUpdate()
@@ -125,13 +125,17 @@ class SettingsActivity : AppCompatActivity(),
                             null
                         }
                     }
-                    supportActionBar!!.setDisplayHomeAsUpEnabled(f !is SettingsFragment)
+                    supportActionBar!!.setDisplayHomeAsUpEnabled(
+                        f !is SettingsFragment && f !is ViewerSettingsFragment
+                    )
                 }
             }, false
         )
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menu?.clear()
+        if (FuelDeviceSync.role(this) == FuelSyncRole.SECONDARY) return true
         menuInflater.inflate(R.menu.settings_menu, menu)
         return true
     }
@@ -207,6 +211,32 @@ class SettingsActivity : AppCompatActivity(),
 
     fun selectFuelSyncViewerFile() {
         fuelSyncViewerFileLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+    }
+
+    private fun showInitialRoleDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.initial_role_title)
+            .setMessage(R.string.initial_role_message)
+            .setPositiveButton(R.string.initial_role_primary) { _, _ -> selectInitialRole(FuelSyncRole.PRIMARY) }
+            .setNegativeButton(R.string.initial_role_viewer) { _, _ -> selectInitialRole(FuelSyncRole.SECONDARY) }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun selectInitialRole(role: FuelSyncRole) {
+        PreferenceManager.getDefaultSharedPreferences(this).edit()
+            .putString(FuelDeviceSync.PREF_ROLE, role.value)
+            .commit()
+        FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
+        showRootForRole(role)
+        invalidateOptionsMenu()
+    }
+
+    private fun showRootForRole(role: FuelSyncRole) {
+        val fragment = if (role == FuelSyncRole.SECONDARY) ViewerSettingsFragment() else SettingsFragment()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.settings_fragment, fragment)
+            .commit()
     }
 
     private fun launchFragment(

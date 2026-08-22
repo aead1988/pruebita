@@ -224,6 +224,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .commit()
             FuelSyncScheduler.refresh(requireContext(), runImmediately = true)
             updateFuelSyncControls(FuelSyncRole.from(newValue))
+            if (FuelSyncRole.from(newValue) == FuelSyncRole.SECONDARY) requireActivity().recreate()
             true
         }
         fuelRecordsPref.setOnPreferenceClickListener {

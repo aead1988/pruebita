@@ -338,6 +338,15 @@
     <string name="fuel_records_trip_values">%1$s km · %2$s gal · %3$s km/gal\n$%4$s · %5$s</string>
     <string name="fuel_records_empty">Todavía no existen viajes sincronizados.</string>
     <plurals name="fuel_records_trip_count"><item quantity="one">%d viaje registrado</item><item quantity="other">%d viajes registrados</item></plurals>
+    <string name="initial_role_title">¿Cómo usarás My Huno?</string>
+    <string name="initial_role_message">Elige Principal para el teléfono conectado al carro o Visor para consultar los registros desde otro teléfono.</string>
+    <string name="initial_role_primary">Principal · teléfono del carro</string>
+    <string name="initial_role_viewer">Visor · teléfono personal</string>
+    <string name="viewer_category_title">My Huno Visor</string>
+    <string name="viewer_device_category">Configuración del dispositivo</string>
+    <string name="viewer_change_role_title">Cambiar a modo principal</string>
+    <string name="viewer_change_role_summary">Mostrar el menú completo y registrar datos del carro</string>
+    <string name="viewer_change_role_confirm">El teléfono pasará a registrar y publicar los datos del carro. ¿Deseas continuar?</string>
     <string name="fuel_sync_now_title">Sincronizar ahora</string>
     <string name="fuel_sync_now_summary">Utiliza la carpeta de Drive configurada</string>
     <string name="fuel_sync_status_title">Última sincronización</string>

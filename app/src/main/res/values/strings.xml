@@ -323,6 +323,15 @@
     <string name="fuel_records_trip_values">%1$s km · %2$s gal · %3$s km/gal\n$%4$s · %5$s</string>
     <string name="fuel_records_empty">There are no synchronized trips yet.</string>
     <plurals name="fuel_records_trip_count"><item quantity="one">%d recorded trip</item><item quantity="other">%d recorded trips</item></plurals>
+    <string name="initial_role_title">How will you use My Huno?</string>
+    <string name="initial_role_message">Choose Primary for the phone connected to the car or Viewer to consult records from another phone.</string>
+    <string name="initial_role_primary">Primary · car phone</string>
+    <string name="initial_role_viewer">Viewer · personal phone</string>
+    <string name="viewer_category_title">My Huno Viewer</string>
+    <string name="viewer_device_category">Device configuration</string>
+    <string name="viewer_change_role_title">Switch to primary mode</string>
+    <string name="viewer_change_role_summary">Show the complete menu and record car data</string>
+    <string name="viewer_change_role_confirm">This phone will begin recording and publishing the car data. Continue?</string>
     <string name="fuel_sync_now_title">Sync now</string>
     <string name="fuel_sync_now_summary">Use the configured Drive folder</string>
     <string name="fuel_sync_status_title">Last synchronization</string>

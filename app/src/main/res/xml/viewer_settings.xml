@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="viewerCategory"
+        android:title="@string/viewer_category_title">
+        <Preference
+            android:key="viewerRecords"
+            android:persistent="false"
+            android:summary="@string/fuel_records_preference_summary"
+            android:title="@string/fuel_records_preference_title" />
+        <Preference
+            android:key="viewerSyncFile"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_viewer_file_summary"
+            android:title="@string/fuel_sync_viewer_file_title" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="fuelSyncAutomatic"
+            android:summary="@string/fuel_sync_automatic_summary"
+            android:title="@string/fuel_sync_automatic_title" />
+        <Preference
+            android:key="viewerSyncNow"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_now_summary"
+            android:title="@string/fuel_sync_now_title" />
+        <Preference
+            android:key="viewerSyncStatus"
+            android:persistent="false"
+            android:selectable="false"
+            android:summary="@string/fuel_sync_never"
+            android:title="@string/fuel_sync_status_title" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/viewer_device_category">
+        <Preference
+            android:key="viewerChangeRole"
+            android:persistent="false"
+            android:summary="@string/viewer_change_role_summary"
+            android:title="@string/viewer_change_role_title" />
+    </PreferenceCategory>
+</PreferenceScreen>
