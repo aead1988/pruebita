@@ -151,6 +151,11 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/fuel_sync_category">
+        <Preference
+            android:key="fuelRecords"
+            android:persistent="false"
+            android:summary="@string/fuel_records_preference_summary"
+            android:title="@string/fuel_records_preference_title" />
         <ListPreference
             android:defaultValue="disabled"
             android:entries="@array/fuel_sync_role_entries"

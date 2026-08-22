@@ -321,6 +321,23 @@
     <string name="fuel_sync_viewer_file_selected">Archivo de sincronización configurado</string>
     <string name="fuel_sync_viewer_file_saved">Acceso de lectura a Drive configurado</string>
     <string name="fuel_sync_source_required">Selecciona el archivo my-huno-sync.json desde Google Drive</string>
+    <string name="fuel_records_title">Registros sincronizados</string>
+    <string name="fuel_records_preference_title">Ver registros sincronizados</string>
+    <string name="fuel_records_preference_summary">Resumen, tanqueada e historial completo de viajes</string>
+    <string name="fuel_records_heading">Mi conducción</string>
+    <string name="fuel_records_summary">Resumen de consumo</string>
+    <string name="fuel_records_last_sync">Actualizado: %1$s</string>
+    <string name="fuel_records_today">Hoy</string>
+    <string name="fuel_records_week">Semana</string>
+    <string name="fuel_records_month">Mes</string>
+    <string name="fuel_records_year">Año</string>
+    <string name="fuel_records_since_tank">Desde la última tanqueada</string>
+    <string name="fuel_records_period_values">%1$s km · %2$s gal\n%3$s km/gal · $%4$s</string>
+    <string name="fuel_records_trip_number">Viaje %1$d</string>
+    <string name="fuel_records_trip_time">%1$s · %2$s–%3$s</string>
+    <string name="fuel_records_trip_values">%1$s km · %2$s gal · %3$s km/gal\n$%4$s · %5$s</string>
+    <string name="fuel_records_empty">Todavía no existen viajes sincronizados.</string>
+    <plurals name="fuel_records_trip_count"><item quantity="one">%d viaje registrado</item><item quantity="other">%d viajes registrados</item></plurals>
     <string name="fuel_sync_now_title">Sincronizar ahora</string>
     <string name="fuel_sync_now_summary">Utiliza la carpeta de Drive configurada</string>
     <string name="fuel_sync_status_title">Última sincronización</string>

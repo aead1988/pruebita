@@ -53,6 +53,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var monthlyHistoryLocationPref: Preference
     lateinit var restoreFuelBackupPref: Preference
     lateinit var fuelSyncRolePref: ListPreference
+    lateinit var fuelRecordsPref: Preference
     lateinit var fuelSyncAutomaticPref: CheckBoxPreference
     lateinit var fuelSyncViewerFilePref: Preference
     lateinit var fuelSyncNowPref: Preference
@@ -78,6 +79,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         monthlyHistoryLocationPref = findPreference("monthlyHistoryLocation")!!
         restoreFuelBackupPref = findPreference("restoreFuelBackup")!!
         fuelSyncRolePref = findPreference(FuelDeviceSync.PREF_ROLE)!!
+        fuelRecordsPref = findPreference("fuelRecords")!!
         fuelSyncAutomaticPref = findPreference(FuelDeviceSync.PREF_AUTO)!!
         fuelSyncViewerFilePref = findPreference("fuelSyncViewerFile")!!
         fuelSyncNowPref = findPreference("fuelSyncNow")!!
@@ -222,6 +224,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .commit()
             FuelSyncScheduler.refresh(requireContext(), runImmediately = true)
             updateFuelSyncControls(FuelSyncRole.from(newValue))
+            true
+        }
+        fuelRecordsPref.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
             true
         }
         fuelSyncAutomaticPref.setOnPreferenceChangeListener { _, newValue ->

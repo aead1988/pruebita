@@ -28,6 +28,16 @@
         <item name="colorSurface">@color/bgColor</item>
     </style>
 
+    <style name="FuelRecordsTheme" parent="Theme.Material3.Dark">
+        <item name="colorPrimary">#FFC700</item>
+        <item name="colorOnPrimary">#111111</item>
+        <item name="colorSurface">#0A0C10</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="android:windowBackground">#0A0C10</item>
+        <item name="android:statusBarColor">#0A0C10</item>
+        <item name="android:navigationBarColor">#0A0C10</item>
+    </style>
+
 
     <style name="Widget.App.Toolbar" parent="Widget.Material3.Toolbar">
         <item name="android:background">@color/primaryColor</item>
