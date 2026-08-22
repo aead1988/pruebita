@@ -165,6 +165,11 @@
             android:summary="@string/fuel_sync_automatic_summary"
             android:title="@string/fuel_sync_automatic_title" />
         <Preference
+            android:key="fuelSyncViewerFile"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_viewer_file_summary"
+            android:title="@string/fuel_sync_viewer_file_title" />
+        <Preference
             android:key="fuelSyncNow"
             android:persistent="false"
             android:summary="@string/fuel_sync_now_summary"

@@ -54,6 +54,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var restoreFuelBackupPref: Preference
     lateinit var fuelSyncRolePref: ListPreference
     lateinit var fuelSyncAutomaticPref: CheckBoxPreference
+    lateinit var fuelSyncViewerFilePref: Preference
     lateinit var fuelSyncNowPref: Preference
     lateinit var fuelSyncStatusPref: Preference
 
@@ -78,6 +79,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         restoreFuelBackupPref = findPreference("restoreFuelBackup")!!
         fuelSyncRolePref = findPreference(FuelDeviceSync.PREF_ROLE)!!
         fuelSyncAutomaticPref = findPreference(FuelDeviceSync.PREF_AUTO)!!
+        fuelSyncViewerFilePref = findPreference("fuelSyncViewerFile")!!
         fuelSyncNowPref = findPreference("fuelSyncNow")!!
         fuelSyncStatusPref = findPreference("fuelSyncStatus")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -219,6 +221,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .putString(FuelDeviceSync.PREF_ROLE, newValue as String)
                 .commit()
             FuelSyncScheduler.refresh(requireContext(), runImmediately = true)
+            updateFuelSyncControls(FuelSyncRole.from(newValue))
             true
         }
         fuelSyncAutomaticPref.setOnPreferenceChangeListener { _, newValue ->
@@ -230,6 +233,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         fuelSyncNowPref.setOnPreferenceClickListener {
             synchronizePhones(showToast = true)
+            true
+        }
+        fuelSyncViewerFilePref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).selectFuelSyncViewerFile()
             true
         }
 
@@ -302,6 +309,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         updateFuelTripSummary()
         updateMonthlyHistoryLocationSummary()
         updateFuelSyncSummary()
+        updateFuelSyncControls(FuelDeviceSync.role(requireContext()))
         FuelSyncScheduler.refresh(requireContext(), runImmediately = false)
         if (FuelDeviceSync.role(requireContext()) == FuelSyncRole.SECONDARY &&
             FuelDeviceSync.automatic(requireContext())) {
@@ -340,6 +348,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         FuelSyncStatus.UP_TO_DATE -> R.string.fuel_sync_up_to_date
                         FuelSyncStatus.DISABLED -> R.string.fuel_sync_disabled_message
                         FuelSyncStatus.FOLDER_REQUIRED -> R.string.monthly_history_location_required
+                        FuelSyncStatus.SOURCE_REQUIRED -> R.string.fuel_sync_source_required
                         FuelSyncStatus.FILE_NOT_FOUND -> R.string.fuel_sync_file_not_found
                         FuelSyncStatus.ERROR -> R.string.fuel_sync_failed
                     }
@@ -357,6 +366,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
             )
         } else getString(R.string.fuel_sync_never)
+    }
+
+    private fun updateFuelSyncControls(role: FuelSyncRole) {
+        fuelSyncViewerFilePref.isVisible = role == FuelSyncRole.SECONDARY
+        fuelSyncViewerFilePref.summary = if (FuelDeviceSync.viewerFile(requireContext()) != null) {
+            getString(R.string.fuel_sync_viewer_file_selected)
+        } else getString(R.string.fuel_sync_viewer_file_summary)
     }
 
     companion object {

@@ -32,11 +32,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.70-phone-sync.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.71-drive-viewer-fix.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.70-phone-sync
-          path: app/build/outputs/apk/release/My-Huno-2.0.70-phone-sync.apk
+          name: My-Huno-2.0.71-drive-viewer-fix
+          path: app/build/outputs/apk/release/My-Huno-2.0.71-drive-viewer-fix.apk
           if-no-files-found: error

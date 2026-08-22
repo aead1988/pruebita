@@ -35,6 +35,7 @@ enum class FuelSyncStatus {
     UP_TO_DATE,
     DISABLED,
     FOLDER_REQUIRED,
+    SOURCE_REQUIRED,
     FILE_NOT_FOUND,
     ERROR
 }
@@ -50,6 +51,7 @@ object FuelDeviceSync {
     private const val KEY_DEVICE_ID = "device_id"
     private const val KEY_LAST_SUCCESS = "last_success"
     private const val KEY_LAST_APPLIED_REMOTE = "last_applied_remote"
+    private const val KEY_VIEWER_FILE_URI = "viewer_file_uri"
     private const val SYNC_FOLDER = "Sincronizacion"
     private const val SYNC_FILE = "my-huno-sync.json"
     private const val SYNC_MIME = "application/json"
@@ -64,6 +66,15 @@ object FuelDeviceSync {
 
     fun lastSuccess(context: Context): Long =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getLong(KEY_LAST_SUCCESS, 0L)
+
+    fun setViewerFile(context: Context, uri: Uri) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString(KEY_VIEWER_FILE_URI, uri.toString()).commit()
+    }
+
+    fun viewerFile(context: Context): Uri? =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_VIEWER_FILE_URI, null)?.let(Uri::parse)
 
     fun syncNow(context: Context): FuelSyncResult = when (role(context)) {
         FuelSyncRole.PRIMARY -> publish(context)
@@ -106,14 +117,16 @@ object FuelDeviceSync {
     @Synchronized
     fun pull(context: Context): FuelSyncResult {
         if (role(context) != FuelSyncRole.SECONDARY) return FuelSyncResult(FuelSyncStatus.DISABLED)
-        val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context)
-            ?: return FuelSyncResult(FuelSyncStatus.FOLDER_REQUIRED)
         return try {
-            val root = treeDocument(treeUri)
-            val folder = findChild(context, treeUri, root, SYNC_FOLDER)
-                ?: return FuelSyncResult(FuelSyncStatus.FILE_NOT_FOUND)
-            val file = findChild(context, treeUri, folder, SYNC_FILE)
-                ?: return FuelSyncResult(FuelSyncStatus.FILE_NOT_FOUND)
+            val file = viewerFile(context) ?: run {
+                val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context)
+                    ?: return FuelSyncResult(FuelSyncStatus.SOURCE_REQUIRED)
+                val root = treeDocument(treeUri)
+                val folder = findChild(context, treeUri, root, SYNC_FOLDER)
+                    ?: return FuelSyncResult(FuelSyncStatus.FILE_NOT_FOUND)
+                findChild(context, treeUri, folder, SYNC_FILE)
+                    ?: return FuelSyncResult(FuelSyncStatus.FILE_NOT_FOUND)
+            }
             val raw = context.contentResolver.openInputStream(file)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
                 ?: return FuelSyncResult(FuelSyncStatus.ERROR)
             val payload = JSONObject(raw)

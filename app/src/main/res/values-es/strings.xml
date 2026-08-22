@@ -316,6 +316,11 @@
     <string name="fuel_sync_role_secondary">Secundario · visor</string>
     <string name="fuel_sync_automatic_title">Sincronización automática</string>
     <string name="fuel_sync_automatic_summary">Sincroniza al terminar cada viaje y periódicamente cuando exista internet</string>
+    <string name="fuel_sync_viewer_file_title">Seleccionar datos desde Google Drive</string>
+    <string name="fuel_sync_viewer_file_summary">Abre Sincronizacion y selecciona my-huno-sync.json</string>
+    <string name="fuel_sync_viewer_file_selected">Archivo de sincronización configurado</string>
+    <string name="fuel_sync_viewer_file_saved">Acceso de lectura a Drive configurado</string>
+    <string name="fuel_sync_source_required">Selecciona el archivo my-huno-sync.json desde Google Drive</string>
     <string name="fuel_sync_now_title">Sincronizar ahora</string>
     <string name="fuel_sync_now_summary">Utiliza la carpeta de Drive configurada</string>
     <string name="fuel_sync_status_title">Última sincronización</string>

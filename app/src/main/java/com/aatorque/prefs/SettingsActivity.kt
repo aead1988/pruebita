@@ -33,6 +33,7 @@ import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
 import com.aatorque.stats.FuelDriveArchive
+import com.aatorque.stats.FuelDeviceSync
 import com.aatorque.stats.FuelSyncScheduler
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.MonthlyFuelCsvExporter
@@ -204,6 +205,10 @@ class SettingsActivity : AppCompatActivity(),
         fuelBackupRestoreLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
     }
 
+    fun selectFuelSyncViewerFile() {
+        fuelSyncViewerFileLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+    }
+
     private fun launchFragment(
         tag: String,
         fragment: Fragment
@@ -312,6 +317,20 @@ class SettingsActivity : AppCompatActivity(),
                         Toast.LENGTH_LONG
                     ).show()
                 }
+            }
+        }
+
+    private val fuelSyncViewerFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri == null) return@registerForActivityResult
+            try {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                FuelDeviceSync.setViewerFile(applicationContext, uri)
+                FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
+                Toast.makeText(this, R.string.fuel_sync_viewer_file_saved, Toast.LENGTH_SHORT).show()
+            } catch (error: SecurityException) {
+                Timber.e(error, "Unable to persist viewer sync file permission")
+                Toast.makeText(this, R.string.monthly_history_location_failed, Toast.LENGTH_SHORT).show()
             }
         }
 

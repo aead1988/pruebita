@@ -301,6 +301,11 @@
     <string name="fuel_sync_role_secondary">Secondary · viewer</string>
     <string name="fuel_sync_automatic_title">Automatic synchronization</string>
     <string name="fuel_sync_automatic_summary">Sync after each trip and periodically when internet is available</string>
+    <string name="fuel_sync_viewer_file_title">Select data from Google Drive</string>
+    <string name="fuel_sync_viewer_file_summary">Open Sincronizacion and select my-huno-sync.json</string>
+    <string name="fuel_sync_viewer_file_selected">Synchronization file configured</string>
+    <string name="fuel_sync_viewer_file_saved">Drive read access configured</string>
+    <string name="fuel_sync_source_required">Select my-huno-sync.json from Google Drive</string>
     <string name="fuel_sync_now_title">Sync now</string>
     <string name="fuel_sync_now_summary">Use the configured Drive folder</string>
     <string name="fuel_sync_status_title">Last synchronization</string>
