@@ -1,8 +1,15 @@
 package com.aatorque.stats
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.preference.PreferenceManager
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -56,6 +63,8 @@ object FuelDeviceSync {
     private const val SYNC_FILE = "my-huno-sync.json"
     private const val SYNC_MIME = "application/json"
     private const val SCHEMA_VERSION = 2
+    private const val NOTIFICATION_CHANNEL = "my_huno_viewer_sync"
+    private const val NOTIFICATION_ID = 2075
 
     fun role(context: Context): FuelSyncRole = FuelSyncRole.from(
         PreferenceManager.getDefaultSharedPreferences(context).getString(PREF_ROLE, FuelSyncRole.DISABLED.value)
@@ -145,6 +154,7 @@ object FuelDeviceSync {
                 .putLong(KEY_LAST_APPLIED_REMOTE, remoteTimestamp)
                 .putLong(KEY_LAST_SUCCESS, System.currentTimeMillis())
                 .commit()
+            notifyViewerUpdated(context)
             FuelSyncResult(FuelSyncStatus.UPDATED, remoteTimestamp)
         } catch (error: Exception) {
             Timber.e(error, "Unable to pull My Huno device sync")
@@ -264,6 +274,43 @@ object FuelDeviceSync {
     private fun recordSuccess(context: Context, timestamp: Long) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit().putLong(KEY_LAST_SUCCESS, timestamp).apply()
+    }
+
+    private fun notifyViewerUpdated(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) return
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(NotificationChannel(
+            NOTIFICATION_CHANNEL,
+            context.getString(R.string.viewer_notification_channel),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ))
+        val daily = DailyFuelEconomyStore(context).loadCurrent()
+        val trips = FuelTripHistoryStore(context).load()
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val contentIntent = launchIntent?.let {
+            PendingIntent.getActivity(
+                context,
+                0,
+                it,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL)
+            .setSmallIcon(android.R.drawable.stat_notify_sync_noanim)
+            .setContentTitle(context.getString(R.string.viewer_notification_title))
+            .setContentText(context.getString(
+                R.string.viewer_notification_text,
+                trips.size,
+                String.format(java.util.Locale.US, "%.2f", daily.distanceKm),
+                String.format(java.util.Locale.US, "%.2f", daily.fuelCost)
+            ))
+            .setContentIntent(contentIntent)
+            .setAutoCancel(true)
+            .setOnlyAlertOnce(false)
+            .build()
+        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
     }
 
     private fun treeDocument(treeUri: Uri): Uri = DocumentsContract.buildDocumentUriUsingTree(

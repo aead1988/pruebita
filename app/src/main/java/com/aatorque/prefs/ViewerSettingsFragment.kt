@@ -2,15 +2,24 @@ package com.aatorque.prefs
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.aatorque.stats.DailyFuelEconomyStore
+import com.aatorque.stats.ArchivedTrip
 import com.aatorque.stats.FuelDeviceSync
 import com.aatorque.stats.FuelEconomySnapshot
 import com.aatorque.stats.FuelEconomyStore
@@ -21,6 +30,7 @@ import com.aatorque.stats.FuelTripHistoryStore
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.R
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,6 +49,12 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private lateinit var automaticSwitch: MaterialSwitch
     private lateinit var scroll: ScrollView
     private lateinit var syncCard: View
+    private lateinit var recentTripCount: TextView
+    private lateinit var tripList: LinearLayout
+
+    private val notificationPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -52,6 +68,8 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         tankValue = view.findViewById(R.id.viewerTankValue)
         automaticSwitch = view.findViewById(R.id.viewerAutomaticSwitch)
         syncCard = view.findViewById(R.id.viewerSyncCard)
+        recentTripCount = view.findViewById(R.id.viewerRecentTripCount)
+        tripList = view.findViewById(R.id.viewerTripList)
 
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
@@ -77,6 +95,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     override fun onStart() {
         super.onStart()
         (requireActivity() as SettingsActivity).supportActionBar?.hide()
+        requestNotificationPermission()
         render()
         FuelSyncScheduler.refresh(requireContext(), runImmediately = false)
         if (FuelDeviceSync.automatic(requireContext())) synchronize(showToast = false)
@@ -138,6 +157,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         todayValue.text = getString(R.string.viewer_km_value, number(daily.distanceKm))
         monthValue.text = getString(R.string.viewer_cost_value, number(monthly.fuelCost))
         tripsValue.text = trips.size.toString()
+        renderRecentTrips(trips.sortedByDescending { it.startedAt })
         val tankAverage = if (tank.fuelLiters > 0.0001) {
             tank.distanceKm / tank.fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
         } else null
@@ -161,4 +181,116 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     }
 
     private fun number(value: Double): String = String.format(Locale.US, "%.2f", value)
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    private fun renderRecentTrips(trips: List<ArchivedTrip>) {
+        val visible = trips.take(5)
+        recentTripCount.text = getString(R.string.viewer_recent_trips_count, visible.size, trips.size)
+        tripList.removeAllViews()
+        if (visible.isEmpty()) {
+            tripList.addView(textView(
+                getString(R.string.viewer_recent_trips_empty),
+                14f,
+                Color.rgb(95, 96, 101)
+            ).apply { setPadding(dp(6), dp(14), dp(6), dp(8)) })
+            return
+        }
+        visible.forEachIndexed { index, trip ->
+            tripList.addView(recentTripCard(trips.size - index, trip))
+        }
+    }
+
+    private fun recentTripCard(number: Int, trip: ArchivedTrip): MaterialCardView {
+        val card = MaterialCardView(requireContext()).apply {
+            radius = dp(20).toFloat()
+            cardElevation = 0f
+            setCardBackgroundColor(Color.WHITE)
+            strokeColor = Color.rgb(225, 226, 229)
+            strokeWidth = dp(1)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 0, 0, dp(10)) }
+        }
+        val body = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(17), dp(15), dp(17), dp(15))
+        }
+        val top = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        top.addView(textView(
+            getString(R.string.fuel_records_trip_number, number),
+            17f,
+            Color.rgb(9, 9, 9)
+        ).apply {
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        top.addView(textView(trip.classification, 12f, classificationColor(trip.classification)).apply {
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            background = GradientDrawable().apply {
+                setColor(classificationBackground(trip.classification))
+                cornerRadius = dp(14).toFloat()
+            }
+            setPadding(dp(9), dp(5), dp(9), dp(5))
+        })
+        body.addView(top)
+        val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(trip.startedAt))
+        val start = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.startedAt))
+        val end = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.endedAt))
+        body.addView(textView(
+            getString(R.string.fuel_records_trip_time, date, start, end),
+            13f,
+            Color.rgb(112, 113, 118)
+        ).apply { setPadding(0, dp(5), 0, 0) })
+        body.addView(textView(
+            getString(
+                R.string.fuel_records_trip_values,
+                number(trip.distanceKm),
+                number(trip.gallons),
+                trip.averageKmPerGallon?.let(::number) ?: "--",
+                number(trip.fuelCost),
+                duration(trip.elapsedSeconds)
+            ),
+            14f,
+            Color.rgb(32, 33, 38)
+        ).apply { setPadding(0, dp(9), 0, 0) })
+        card.addView(body)
+        return card
+    }
+
+    private fun textView(value: String, size: Float, color: Int) = TextView(requireContext()).apply {
+        text = value
+        textSize = size
+        setTextColor(color)
+    }
+
+    private fun classificationColor(value: String): Int = when (value) {
+        "Viaje eficiente" -> Color.rgb(38, 104, 45)
+        "Viaje poco eficiente" -> Color.rgb(150, 46, 46)
+        else -> Color.rgb(85, 73, 11)
+    }
+
+    private fun classificationBackground(value: String): Int = when (value) {
+        "Viaje eficiente" -> Color.rgb(218, 255, 190)
+        "Viaje poco eficiente" -> Color.rgb(255, 224, 224)
+        else -> Color.rgb(217, 255, 67)
+    }
+
+    private fun duration(seconds: Double): String {
+        val minutes = (seconds / 60.0).toLong().coerceAtLeast(0L)
+        return String.format(Locale.US, "%d:%02d h", minutes / 60L, minutes % 60L)
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

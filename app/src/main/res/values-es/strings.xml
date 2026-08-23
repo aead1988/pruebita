@@ -364,6 +364,12 @@
     <string name="viewer_cost_value">$%1$s</string>
     <string name="viewer_efficiency_value">%1$s km/gal · $%2$s desde tanqueada</string>
     <string name="viewer_no_data">Todavía no hay datos de tanqueada</string>
+    <string name="viewer_recent_trips">Viajes recientes</string>
+    <string name="viewer_recent_trips_count">Mostrando %1$d de %2$d viajes</string>
+    <string name="viewer_recent_trips_empty">Los viajes aparecerán aquí después de la primera sincronización.</string>
+    <string name="viewer_notification_channel">Sincronización del visor</string>
+    <string name="viewer_notification_title">My Huno actualizado</string>
+    <string name="viewer_notification_text">%1$d viajes · Hoy: %2$s km y $%3$s</string>
     <string name="fuel_sync_now_title">Sincronizar ahora</string>
     <string name="fuel_sync_now_summary">Utiliza la carpeta de Drive configurada</string>
     <string name="fuel_sync_status_title">Última sincronización</string>

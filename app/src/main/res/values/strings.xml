@@ -349,6 +349,12 @@
     <string name="viewer_cost_value">$%1$s</string>
     <string name="viewer_efficiency_value">%1$s km/gal · $%2$s since fill-up</string>
     <string name="viewer_no_data">No tank-period data yet</string>
+    <string name="viewer_recent_trips">Recent trips</string>
+    <string name="viewer_recent_trips_count">Showing %1$d of %2$d trips</string>
+    <string name="viewer_recent_trips_empty">Trips will appear here after the first synchronization.</string>
+    <string name="viewer_notification_channel">Viewer synchronization</string>
+    <string name="viewer_notification_title">My Huno updated</string>
+    <string name="viewer_notification_text">%1$d trips · Today: %2$s km and $%3$s</string>
     <string name="fuel_sync_now_title">Sync now</string>
     <string name="fuel_sync_now_summary">Use the configured Drive folder</string>
     <string name="fuel_sync_status_title">Last synchronization</string>
