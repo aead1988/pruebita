@@ -323,13 +323,13 @@ object FuelDriveArchive {
         canvas.drawText("VIAJE", 85f, 282f, paint)
         canvas.drawText("INICIO", 220f, 282f, paint)
         canvas.drawText("FIN", 345f, 282f, paint)
-        canvas.drawText("DISTANCIA", 470f, 282f, paint)
-        canvas.drawText("GALONES", 680f, 282f, paint)
-        canvas.drawText("RENDIMIENTO", 870f, 282f, paint)
-        canvas.drawText("VEL. PROM.", 1140f, 282f, paint)
-        canvas.drawText("COSTO", 1360f, 282f, paint)
-        canvas.drawText("DURACIÓN", 1510f, 282f, paint)
-        canvas.drawText("PUNTUACIÓN", 1700f, 282f, paint)
+        canvas.drawText("DURACIÓN", 470f, 282f, paint)
+        canvas.drawText("DISTANCIA", 650f, 282f, paint)
+        canvas.drawText("GALONES", 850f, 282f, paint)
+        canvas.drawText("RENDIMIENTO", 1030f, 282f, paint)
+        canvas.drawText("VEL. PROM.", 1300f, 282f, paint)
+        canvas.drawText("COSTO", 1510f, 282f, paint)
+        canvas.drawText("PUNTUACIÓN", 1660f, 282f, paint)
 
         trips.forEachIndexed { index, trip ->
             val y = 340f + index * 96f
@@ -340,14 +340,14 @@ object FuelDriveArchive {
             canvas.drawText("Viaje ${index + 1}", 85f, y, paint)
             canvas.drawText(time(trip.startedAt), 220f, y, paint)
             canvas.drawText(time(trip.endedAt), 345f, y, paint)
-            canvas.drawText("${number(trip.distanceKm)} km", 470f, y, paint)
-            canvas.drawText("${number(trip.gallons)} gal", 680f, y, paint)
-            canvas.drawText("${numberOrDash(trip.averageKmPerGallon)} km/gal", 870f, y, paint)
-            canvas.drawText("${numberOrDash(trip.averageSpeedKph)} km/h", 1140f, y, paint)
-            canvas.drawText("\$${number(trip.fuelCost)}", 1360f, y, paint)
-            canvas.drawText(duration(trip.elapsedSeconds), 1510f, y, paint)
+            canvas.drawText(duration(trip.elapsedSeconds), 470f, y, paint)
+            canvas.drawText("${number(trip.distanceKm)} km", 650f, y, paint)
+            canvas.drawText("${number(trip.gallons)} gal", 850f, y, paint)
+            canvas.drawText("${numberOrDash(trip.averageKmPerGallon)} km/gal", 1030f, y, paint)
+            canvas.drawText("${numberOrDash(trip.averageSpeedKph)} km/h", 1300f, y, paint)
+            canvas.drawText("\$${number(trip.fuelCost)}", 1510f, y, paint)
             paint.color = classificationColor(trip.classification)
-            canvas.drawText(trip.classification, 1700f, y, paint)
+            canvas.drawText(trip.classification, 1660f, y, paint)
         }
         paint.color = Color.LTGRAY
         paint.textSize = 22f

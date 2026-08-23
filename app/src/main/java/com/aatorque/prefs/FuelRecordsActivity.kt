@@ -183,15 +183,18 @@ class FuelRecordsActivity : AppCompatActivity() {
         val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(trip.startedAt))
         val start = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.startedAt))
         val end = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(trip.endedAt))
-        body.addView(textView(getString(R.string.fuel_records_trip_time, date, start, end), 14f, Color.rgb(112, 113, 118)))
+        body.addView(textView(
+            getString(R.string.fuel_records_trip_time, date, start, end, duration(trip.elapsedSeconds)),
+            14f,
+            Color.rgb(112, 113, 118)
+        ))
         body.addView(textView(
             getString(
                 R.string.fuel_records_trip_values,
                 number(trip.distanceKm),
                 number(trip.gallons),
                 trip.averageKmPerGallon?.let(::number) ?: "--",
-                number(trip.fuelCost),
-                duration(trip.elapsedSeconds)
+                number(trip.fuelCost)
             ),
             15f,
             Color.rgb(32, 33, 38)
