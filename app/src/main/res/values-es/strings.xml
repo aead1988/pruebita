@@ -335,7 +335,7 @@
     <string name="fuel_records_since_tank">Desde la última tanqueada</string>
     <string name="fuel_records_period_values">%1$s km · %2$s gal\n%3$s km/gal · $%4$s</string>
     <string name="fuel_records_trip_number">Viaje %1$d</string>
-    <string name="fuel_records_trip_time">%1$s · %2$s–%3$s · %4$s</string>
+    <string name="fuel_records_trip_time">%1$s\nInicio %2$s · Fin %3$s · Duración %4$s</string>
     <string name="fuel_records_trip_values">%1$s km · %2$s gal · %3$s km/gal\n$%4$s</string>
     <string name="fuel_records_empty">Todavía no existen viajes sincronizados.</string>
     <plurals name="fuel_records_trip_count"><item quantity="one">%d viaje registrado</item><item quantity="other">%d viajes registrados</item></plurals>
