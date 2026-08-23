@@ -320,7 +320,7 @@
     <string name="fuel_records_since_tank">Since last fill-up</string>
     <string name="fuel_records_period_values">%1$s km · %2$s gal\n%3$s km/gal · $%4$s</string>
     <string name="fuel_records_trip_number">Trip %1$d</string>
-    <string name="fuel_records_trip_time">%1$s · %2$s–%3$s · %4$s</string>
+    <string name="fuel_records_trip_time">%1$s\nStart %2$s · End %3$s · Duration %4$s</string>
     <string name="fuel_records_trip_values">%1$s km · %2$s gal · %3$s km/gal\n$%4$s</string>
     <string name="fuel_records_empty">There are no synchronized trips yet.</string>
     <plurals name="fuel_records_trip_count"><item quantity="one">%d recorded trip</item><item quantity="other">%d recorded trips</item></plurals>
