@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - agent/media-modes
-      - feature/2.0.82-home-pending
+      - feature/2.0.83-dashboard-analysis
   pull_request:
     branches:
       - master
@@ -33,11 +33,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.82-home-pending.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.83-dashboard-analysis.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.82-home-pending
-          path: app/build/outputs/apk/release/My-Huno-2.0.82-home-pending.apk
+          name: My-Huno-2.0.83-dashboard-analysis
+          path: app/build/outputs/apk/release/My-Huno-2.0.83-dashboard-analysis.apk
           if-no-files-found: error

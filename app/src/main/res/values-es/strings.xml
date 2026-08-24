@@ -410,6 +410,12 @@
     <string name="viewer_recent_trips">Viajes recientes</string>
     <string name="viewer_recent_trips_count">Mostrando %1$d de %2$d viajes</string>
     <string name="viewer_recent_trips_empty">Los viajes aparecerán aquí después de la primera sincronización.</string>
+    <string name="viewer_analysis_title">Análisis de conducción</string>
+    <string name="viewer_analysis_efficiency">Eficiencia de viajes recientes (km/gal)</string>
+    <string name="viewer_analysis_distance">Distancia por viaje (km)</string>
+    <string name="viewer_analysis_average">%1$s km/gal promedio · %2$s km analizados</string>
+    <string name="viewer_analysis_empty">Los gráficos aparecerán después del primer viaje registrado.</string>
+    <string name="viewer_analysis_description">Gráficos de eficiencia y distancia de los viajes</string>
     <string name="viewer_notification_channel">Sincronización del visor</string>
     <string name="viewer_notification_title">My Huno actualizado</string>
     <string name="viewer_notification_text">%1$d viajes · Hoy: %2$s km y $%3$s</string>

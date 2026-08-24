@@ -40,12 +40,8 @@ import java.util.Date
 import java.util.Locale
 
 class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
-    private lateinit var lastSync: TextView
     private lateinit var syncState: TextView
     private lateinit var fileState: TextView
-    private lateinit var todayValue: TextView
-    private lateinit var monthValue: TextView
-    private lateinit var tripsValue: TextView
     private lateinit var tankValue: TextView
     private lateinit var automaticSwitch: MaterialSwitch
     private lateinit var scroll: ScrollView
@@ -58,6 +54,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private lateinit var overviewMonthValues: TextView
     private lateinit var overviewYearValues: TextView
     private lateinit var overviewTankValues: TextView
+    private lateinit var drivingAnalysis: DrivingAnalysisView
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -66,12 +63,8 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         scroll = view.findViewById(R.id.viewerScroll)
-        lastSync = view.findViewById(R.id.viewerLastSync)
         syncState = view.findViewById(R.id.viewerSyncState)
         fileState = view.findViewById(R.id.viewerFileState)
-        todayValue = view.findViewById(R.id.viewerTodayValue)
-        monthValue = view.findViewById(R.id.viewerMonthValue)
-        tripsValue = view.findViewById(R.id.viewerTripsValue)
         tankValue = view.findViewById(R.id.viewerTankValue)
         automaticSwitch = view.findViewById(R.id.viewerAutomaticSwitch)
         syncCard = view.findViewById(R.id.viewerSyncCard)
@@ -83,6 +76,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         overviewMonthValues = bindPeriodCard(view, R.id.viewerMonthCard, R.string.fuel_records_month)
         overviewYearValues = bindPeriodCard(view, R.id.viewerYearCard, R.string.fuel_records_year)
         overviewTankValues = bindPeriodCard(view, R.id.viewerTankCard, R.string.fuel_records_since_tank)
+        drivingAnalysis = view.findViewById(R.id.viewerDrivingAnalysis)
 
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
@@ -123,6 +117,9 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     override fun onStart() {
         super.onStart()
         (requireActivity() as SettingsActivity).supportActionBar?.hide()
+        requireActivity().window.statusBarColor = Color.rgb(236, 237, 239)
+        requireActivity().findViewById<View>(R.id.settingsLayout)
+            .setBackgroundColor(Color.rgb(236, 237, 239))
         requestNotificationPermission()
         render()
         FuelSyncScheduler.refresh(requireContext(), runImmediately = false)
@@ -197,15 +194,13 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         val price = PreferenceManager.getDefaultSharedPreferences(context)
             .getString("fuelPricePerGallon", "3.24")?.toDoubleOrNull() ?: 3.24
 
-        todayValue.text = getString(R.string.viewer_km_value, number(daily.distanceKm))
-        monthValue.text = getString(R.string.viewer_cost_value, number(monthly.fuelCost))
-        tripsValue.text = trips.size.toString()
         renderRecentTrips(trips.sortedByDescending { it.startedAt })
         overviewTodayValues.text = periodValues(daily.distanceKm, daily.fuelLiters, daily.fuelCost)
         overviewWeekValues.text = periodValues(weekly.distanceKm, weekly.fuelLiters, weekly.fuelCost)
         overviewMonthValues.text = periodValues(monthly.distanceKm, monthly.fuelLiters, monthly.fuelCost)
         overviewYearValues.text = periodValues(annualDistance, annualLiters, annualCost)
         overviewTankValues.text = periodValues(tank.distanceKm, tank.fuelLiters, tank.fuelGallons * price)
+        drivingAnalysis.setData(trips)
         val tankAverage = if (tank.fuelLiters > 0.0001) {
             tank.distanceKm / tank.fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
         } else null
@@ -219,11 +214,8 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         )
         val timestamp = FuelDeviceSync.lastSuccess(context)
         if (timestamp > 0L) {
-            val formatted = SimpleDateFormat("dd MMM · HH:mm", Locale.getDefault()).format(Date(timestamp))
-            lastSync.text = getString(R.string.viewer_updated_format, formatted)
             syncState.setText(R.string.viewer_sync_ready)
         } else {
-            lastSync.setText(R.string.fuel_sync_never)
             syncState.setText(R.string.viewer_sync_waiting)
         }
     }

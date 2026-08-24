@@ -47,7 +47,6 @@ class MiAveoActivity : AppCompatActivity() {
         scroll = findViewById(R.id.aveoScroll)
         findViewById<View>(R.id.aveoSectionServices).setOnClickListener { showSection(R.id.aveoServicesSection, R.id.aveoSectionServices) }
         findViewById<View>(R.id.aveoSectionDocuments).setOnClickListener { showSection(R.id.aveoDocumentsSection, R.id.aveoSectionDocuments) }
-        findViewById<View>(R.id.aveoSectionReminders).setOnClickListener { showSection(R.id.aveoRemindersSection, R.id.aveoSectionReminders) }
         findViewById<View>(R.id.aveoSectionReports).setOnClickListener { showSection(R.id.aveoReportsSection, R.id.aveoSectionReports) }
         findViewById<View>(R.id.aveoChooseFile).setOnClickListener {
             fileLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
@@ -61,6 +60,7 @@ class MiAveoActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.aveoNavAveo).setOnClickListener {
             selectNavigation(R.id.aveoNavAveo)
+            showSection(R.id.aveoServicesSection, R.id.aveoSectionServices)
             scroll.smoothScrollTo(0, 0)
         }
         findViewById<View>(R.id.aveoNavPending).setOnClickListener { showPending() }
@@ -143,7 +143,6 @@ class MiAveoActivity : AppCompatActivity() {
         )
         findViewById<TextView>(R.id.aveoKm).text = getString(R.string.aveo_km_format, vehicle.getInt("currentKm"))
         findViewById<TextView>(R.id.aveoMaintenanceCount).text = summary.getInt("maintenanceCount").toString()
-        findViewById<TextView>(R.id.aveoPendingCount).text = summary.getInt("pendingCount").toString()
         findViewById<TextView>(R.id.aveoUpdated).text = getString(R.string.aveo_updated_format, vehicle.getString("updatedAt"))
 
         pendingList.removeAllViews()
@@ -176,16 +175,17 @@ class MiAveoActivity : AppCompatActivity() {
 
     private fun showPending() {
         selectNavigation(R.id.aveoNavPending)
-        showSection(R.id.aveoRemindersSection, R.id.aveoSectionReminders)
+        showSection(R.id.aveoRemindersSection, null)
         val target = findViewById<View>(R.id.aveoPendingTitle)
         val container = findViewById<View>(R.id.aveoDataContainer)
         scroll.post { scroll.smoothScrollTo(0, container.top + target.top) }
     }
 
-    private fun showSection(sectionId: Int, tabId: Int) {
+    private fun showSection(sectionId: Int, tabId: Int?) {
+        findViewById<View>(R.id.aveoTabs).visibility = if (tabId == null) View.GONE else View.VISIBLE
         intArrayOf(R.id.aveoServicesSection, R.id.aveoDocumentsSection, R.id.aveoRemindersSection, R.id.aveoReportsSection)
             .forEach { findViewById<View>(it).visibility = if (it == sectionId) View.VISIBLE else View.GONE }
-        intArrayOf(R.id.aveoSectionServices, R.id.aveoSectionDocuments, R.id.aveoSectionReminders, R.id.aveoSectionReports)
+        intArrayOf(R.id.aveoSectionServices, R.id.aveoSectionDocuments, R.id.aveoSectionReports)
             .forEach { id ->
                 findViewById<TextView>(id).apply {
                     setBackgroundColor(Color.TRANSPARENT)
@@ -193,10 +193,12 @@ class MiAveoActivity : AppCompatActivity() {
                     setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 }
             }
-        findViewById<TextView>(tabId).apply {
-            setBackgroundResource(R.drawable.viewer_nav_selected)
-            setTextColor(Color.rgb(9, 9, 9))
-            setTypeface(Typeface.DEFAULT, Typeface.BOLD)
+        tabId?.let {
+            findViewById<TextView>(it).apply {
+                setBackgroundResource(R.drawable.viewer_nav_selected)
+                setTextColor(Color.rgb(9, 9, 9))
+                setTypeface(Typeface.DEFAULT, Typeface.BOLD)
+            }
         }
     }
 

@@ -395,6 +395,12 @@
     <string name="viewer_recent_trips">Recent trips</string>
     <string name="viewer_recent_trips_count">Showing %1$d of %2$d trips</string>
     <string name="viewer_recent_trips_empty">Trips will appear here after the first synchronization.</string>
+    <string name="viewer_analysis_title">Driving analysis</string>
+    <string name="viewer_analysis_efficiency">Efficiency of recent trips (km/gal)</string>
+    <string name="viewer_analysis_distance">Distance per trip (km)</string>
+    <string name="viewer_analysis_average">%1$s km/gal average · %2$s km analyzed</string>
+    <string name="viewer_analysis_empty">The charts will appear after the first recorded trip.</string>
+    <string name="viewer_analysis_description">Charts of trip efficiency and distance</string>
     <string name="viewer_notification_channel">Viewer synchronization</string>
     <string name="viewer_notification_title">My Huno updated</string>
     <string name="viewer_notification_text">%1$d trips · Today: %2$s km and $%3$s</string>

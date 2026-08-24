@@ -234,6 +234,14 @@ class SettingsActivity : AppCompatActivity(),
     }
 
     private fun showRootForRole(role: FuelSyncRole) {
+        if (role == FuelSyncRole.SECONDARY) {
+            supportActionBar?.hide()
+            window.statusBarColor = android.graphics.Color.rgb(236, 237, 239)
+            findViewById<android.view.View>(R.id.settingsLayout)
+                .setBackgroundColor(android.graphics.Color.rgb(236, 237, 239))
+        } else {
+            supportActionBar?.show()
+        }
         val fragment = if (role == FuelSyncRole.SECONDARY) ViewerSettingsFragment() else SettingsFragment()
         supportFragmentManager.beginTransaction()
             .replace(R.id.settings_fragment, fragment)
