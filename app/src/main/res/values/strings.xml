@@ -408,6 +408,12 @@
     <string name="viewer_analysis_average">%1$s km/gal average · %2$s km analyzed</string>
     <string name="viewer_analysis_empty">The charts will appear after the first recorded trip.</string>
     <string name="viewer_analysis_description">Charts of trip efficiency and distance</string>
+    <string name="viewer_fuel_efficiency_title">Fuel efficiency</string>
+    <string name="viewer_fuel_efficiency_last_label">Last</string>
+    <string name="viewer_fuel_efficiency_high_label">Highest</string>
+    <string name="viewer_fuel_efficiency_low_label">Lowest</string>
+    <string name="viewer_fuel_efficiency_value">%1$s km/gal</string>
+    <string name="viewer_fuel_efficiency_empty_value">-- km/gal</string>
     <string name="viewer_settings_title">Settings</string>
     <string name="viewer_settings_subtitle">Records, synchronization and device configuration</string>
     <string name="expense_summary_title">Expenses</string>

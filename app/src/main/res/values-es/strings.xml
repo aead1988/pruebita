@@ -423,6 +423,12 @@
     <string name="viewer_analysis_average">%1$s km/gal promedio · %2$s km analizados</string>
     <string name="viewer_analysis_empty">Los gráficos aparecerán después del primer viaje registrado.</string>
     <string name="viewer_analysis_description">Gráficos de eficiencia y distancia de los viajes</string>
+    <string name="viewer_fuel_efficiency_title">Eficiencia del combustible</string>
+    <string name="viewer_fuel_efficiency_last_label">Último</string>
+    <string name="viewer_fuel_efficiency_high_label">Más grande</string>
+    <string name="viewer_fuel_efficiency_low_label">Inferior</string>
+    <string name="viewer_fuel_efficiency_value">%1$s km/gal</string>
+    <string name="viewer_fuel_efficiency_empty_value">-- km/gal</string>
     <string name="viewer_settings_title">Ajustes</string>
     <string name="viewer_settings_subtitle">Registros, sincronización y configuración del dispositivo</string>
     <string name="expense_summary_title">Gastos</string>

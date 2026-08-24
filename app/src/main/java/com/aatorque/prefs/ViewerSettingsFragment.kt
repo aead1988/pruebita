@@ -54,6 +54,9 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private lateinit var overviewMonthValues: TextView
     private lateinit var overviewYearValues: TextView
     private lateinit var overviewTankValues: TextView
+    private lateinit var efficiencyLastValue: TextView
+    private lateinit var efficiencyHighValue: TextView
+    private lateinit var efficiencyLowValue: TextView
     private lateinit var drivingAnalysis: DrivingAnalysisView
 
     private val notificationPermission = registerForActivityResult(
@@ -76,6 +79,9 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         overviewMonthValues = bindPeriodCard(view, R.id.viewerMonthCard, R.string.fuel_records_month)
         overviewYearValues = bindPeriodCard(view, R.id.viewerYearCard, R.string.fuel_records_year)
         overviewTankValues = bindPeriodCard(view, R.id.viewerTankCard, R.string.fuel_records_since_tank)
+        efficiencyLastValue = view.findViewById(R.id.viewerEfficiencyLastValue)
+        efficiencyHighValue = view.findViewById(R.id.viewerEfficiencyHighValue)
+        efficiencyLowValue = view.findViewById(R.id.viewerEfficiencyLowValue)
         drivingAnalysis = view.findViewById(R.id.viewerDrivingAnalysis)
 
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
@@ -235,6 +241,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         overviewMonthValues.text = periodValues(monthly.distanceKm, monthly.fuelLiters, monthly.fuelCost)
         overviewYearValues.text = periodValues(annualDistance, annualLiters, annualCost)
         overviewTankValues.text = periodValues(tank.distanceKm, tank.fuelLiters, tank.fuelGallons * price)
+        renderFuelEfficiency(trips)
         drivingAnalysis.setData(trips)
         val tankAverage = if (tank.fuelLiters > 0.0001) {
             tank.distanceKm / tank.fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
@@ -256,6 +263,24 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     }
 
     private fun number(value: Double): String = String.format(Locale.US, "%.2f", value)
+
+    private fun renderFuelEfficiency(trips: List<ArchivedTrip>) {
+        val validTrips = trips.mapNotNull { trip ->
+            trip.averageKmPerGallon?.takeIf { value ->
+                value > 0.0 && !value.isNaN() && !value.isInfinite()
+            }?.let { value -> trip to value }
+        }
+        val last = validTrips.maxByOrNull { it.first.endedAt }?.second
+        val highest = validTrips.maxOfOrNull { it.second }
+        val lowest = validTrips.minOfOrNull { it.second }
+        efficiencyLastValue.text = efficiencyValue(last)
+        efficiencyHighValue.text = efficiencyValue(highest)
+        efficiencyLowValue.text = efficiencyValue(lowest)
+    }
+
+    private fun efficiencyValue(value: Double?): String = value?.let {
+        getString(R.string.viewer_fuel_efficiency_value, number(it))
+    } ?: getString(R.string.viewer_fuel_efficiency_empty_value)
 
     private fun bindPeriodCard(root: View, cardId: Int, titleId: Int): TextView {
         val card = root.findViewById<View>(cardId)

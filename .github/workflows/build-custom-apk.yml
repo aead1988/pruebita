@@ -33,11 +33,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.88-icon-safe-area.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.89-fuel-efficiency.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.88-icon-safe-area
-          path: app/build/outputs/apk/release/My-Huno-2.0.88-icon-safe-area.apk
+          name: My-Huno-2.0.89-fuel-efficiency
+          path: app/build/outputs/apk/release/My-Huno-2.0.89-fuel-efficiency.apk
           if-no-files-found: error
