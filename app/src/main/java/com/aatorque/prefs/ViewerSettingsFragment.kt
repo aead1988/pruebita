@@ -85,7 +85,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
             startActivity(Intent(requireContext(), MiAveoActivity::class.java))
         }
         view.findViewById<View>(R.id.viewerNavPending).setOnClickListener {
-            startActivity(Intent(requireContext(), MiAveoActivity::class.java).putExtra("section", "pending"))
+            startActivity(Intent(requireContext(), PendingActivity::class.java))
         }
         view.findViewById<View>(R.id.viewerNavExpenses).setOnClickListener {
             startActivity(Intent(requireContext(), ExpenseSummaryActivity::class.java))

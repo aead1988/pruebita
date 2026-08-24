@@ -49,8 +49,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/viewer_vehicle_title"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/my_huno_rear_hero" />
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/my_huno_expenses_photo" />
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView

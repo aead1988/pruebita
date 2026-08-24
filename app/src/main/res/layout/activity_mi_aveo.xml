@@ -49,8 +49,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/viewer_vehicle_title"
-                android:scaleType="centerInside"
-                android:src="@drawable/my_huno_front_hero" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/my_huno_aveo_photo" />
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -189,17 +189,6 @@
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_documents_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
             <LinearLayout android:id="@+id/aveoDocumentsList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/aveoRemindersSection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <TextView android:id="@+id/aveoPendingTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_reminders_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
-            <LinearLayout android:id="@+id/aveoPendingList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" />
         </LinearLayout>
 
         <LinearLayout

@@ -25,12 +25,10 @@ import org.json.JSONObject
 import java.util.Locale
 
 class MiAveoActivity : AppCompatActivity() {
-    private lateinit var pendingList: LinearLayout
     private lateinit var maintenanceList: LinearLayout
     private lateinit var documentsList: LinearLayout
     private lateinit var categoryBreakdown: LinearLayout
     private lateinit var scroll: ScrollView
-    private var currentKm = 0
 
     private val fileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) selectFile(uri)
@@ -40,7 +38,6 @@ class MiAveoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mi_aveo)
         supportActionBar?.hide()
-        pendingList = findViewById(R.id.aveoPendingList)
         maintenanceList = findViewById(R.id.aveoMaintenanceList)
         documentsList = findViewById(R.id.aveoDocumentsList)
         categoryBreakdown = findViewById(R.id.aveoCategoryBreakdown)
@@ -62,7 +59,10 @@ class MiAveoActivity : AppCompatActivity() {
             showSection(R.id.aveoServicesSection, R.id.aveoSectionServices)
             scroll.smoothScrollTo(0, 0)
         }
-        findViewById<View>(R.id.aveoNavPending).setOnClickListener { showPending() }
+        findViewById<View>(R.id.aveoNavPending).setOnClickListener {
+            startActivity(Intent(this, PendingActivity::class.java))
+            finish()
+        }
         findViewById<View>(R.id.aveoNavExpenses).setOnClickListener {
             startActivity(Intent(this, ExpenseSummaryActivity::class.java))
             finish()
@@ -72,9 +72,6 @@ class MiAveoActivity : AppCompatActivity() {
                 .putBoolean(ViewerSettingsFragment.PREF_OPEN_SETTINGS, true)
                 .apply()
             finish()
-        }
-        if (intent.getStringExtra("section") == "pending") {
-            selectNavigation(R.id.aveoNavPending)
         }
     }
 
@@ -136,7 +133,6 @@ class MiAveoActivity : AppCompatActivity() {
         )
         val vehicle = root.getJSONObject("vehicle")
         val summary = root.getJSONObject("summary")
-        currentKm = vehicle.getInt("currentKm")
         findViewById<TextView>(R.id.aveoVehicleName).text = vehicle.getString("name")
         findViewById<TextView>(R.id.aveoVehicleDetail).text = getString(
             R.string.aveo_vehicle_detail_format,
@@ -148,23 +144,6 @@ class MiAveoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.aveoMaintenanceCount).text = summary.getInt("maintenanceCount").toString()
         findViewById<TextView>(R.id.aveoUpdated).text = getString(R.string.aveo_updated_format, vehicle.getString("updatedAt"))
 
-        pendingList.removeAllViews()
-        root.getJSONArray("pending")
-            .toObjectList()
-            .sortedWith(
-                compareBy<JSONObject> {
-                    when {
-                        !it.has("dueKm") -> 2
-                        it.optInt("dueKm") <= currentKm -> 0
-                        else -> 1
-                    }
-                }.thenBy {
-                    if (it.has("dueKm")) kotlin.math.abs(it.optInt("dueKm") - currentKm)
-                    else Int.MAX_VALUE
-                }.thenBy { it.optString("dueDate", "9999-12-31") }
-                    .thenBy { it.optString("title") }
-            )
-            .forEach { pendingList.addView(pendingCard(it)) }
         maintenanceList.removeAllViews()
         documentsList.removeAllViews()
         val maintenance = root.getJSONArray("maintenance")
@@ -173,20 +152,11 @@ class MiAveoActivity : AppCompatActivity() {
             else maintenanceList.addView(maintenanceCard(it))
         }
         renderReports(maintenance)
-        if (intent.getStringExtra("section") == "pending") showPending()
     }
 
-    private fun showPending() {
-        selectNavigation(R.id.aveoNavPending)
-        showSection(R.id.aveoRemindersSection, null)
-        val target = findViewById<View>(R.id.aveoPendingTitle)
-        val container = findViewById<View>(R.id.aveoDataContainer)
-        scroll.post { scroll.smoothScrollTo(0, container.top + target.top) }
-    }
-
-    private fun showSection(sectionId: Int, tabId: Int?) {
-        findViewById<View>(R.id.aveoTabs).visibility = if (tabId == null) View.GONE else View.VISIBLE
-        intArrayOf(R.id.aveoServicesSection, R.id.aveoDocumentsSection, R.id.aveoRemindersSection, R.id.aveoReportsSection)
+    private fun showSection(sectionId: Int, tabId: Int) {
+        findViewById<View>(R.id.aveoTabs).visibility = View.VISIBLE
+        intArrayOf(R.id.aveoServicesSection, R.id.aveoDocumentsSection, R.id.aveoReportsSection)
             .forEach { findViewById<View>(it).visibility = if (it == sectionId) View.VISIBLE else View.GONE }
         intArrayOf(R.id.aveoSectionServices, R.id.aveoSectionDocuments, R.id.aveoSectionReports)
             .forEach { id ->
@@ -196,12 +166,10 @@ class MiAveoActivity : AppCompatActivity() {
                     setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 }
             }
-        tabId?.let {
-            findViewById<TextView>(it).apply {
-                setBackgroundResource(R.drawable.viewer_nav_selected)
-                setTextColor(Color.rgb(9, 9, 9))
-                setTypeface(Typeface.DEFAULT, Typeface.BOLD)
-            }
+        findViewById<TextView>(tabId).apply {
+            setBackgroundResource(R.drawable.viewer_nav_selected)
+            setTextColor(Color.rgb(9, 9, 9))
+            setTypeface(Typeface.DEFAULT, Typeface.BOLD)
         }
     }
 
@@ -225,54 +193,6 @@ class MiAveoActivity : AppCompatActivity() {
             setTextColor(Color.rgb(9, 9, 9))
             setTypeface(Typeface.DEFAULT, Typeface.BOLD)
         }
-    }
-
-    private fun pendingCard(item: JSONObject): MaterialCardView {
-        val card = baseCard()
-        val body = verticalBody()
-        val top = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        top.addView(label(item.getString("title"), 16f, Color.rgb(9, 9, 9), true).apply {
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        })
-        top.addView(label(item.getString("category"), 11f, Color.rgb(35, 40, 20), true).apply {
-            background = GradientDrawable().apply {
-                setColor(Color.rgb(217, 255, 67))
-                cornerRadius = dp(13).toFloat()
-            }
-            setPadding(dp(9), dp(5), dp(9), dp(5))
-        })
-        body.addView(top)
-        body.addView(label(item.getString("detail"), 14f, Color.rgb(102, 103, 108)).apply {
-            setPadding(0, dp(7), 0, 0)
-        })
-        if (item.has("dueKm") && item.has("lastKm")) {
-            val due = item.getInt("dueKm")
-            val last = item.getInt("lastKm")
-            val progress = (((currentKm - last).toDouble() / (due - last).coerceAtLeast(1)) * 100).toInt().coerceIn(0, 100)
-            val remaining = due - currentKm
-            val color = when {
-                remaining <= 0 -> Color.rgb(220, 53, 69)
-                progress >= 80 -> Color.rgb(255, 181, 45)
-                else -> Color.rgb(150, 190, 40)
-            }
-            body.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-                max = 100
-                this.progress = progress
-                progressTintList = ColorStateList.valueOf(color)
-                progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(232, 233, 236))
-                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(7)).apply { setMargins(0, dp(12), 0, 0) }
-            })
-            val status = if (remaining >= 0) getString(R.string.aveo_reminder_progress, progress, remaining)
-                else getString(R.string.aveo_reminder_overdue, -remaining)
-            body.addView(label(status, 12f, color, true).apply { setPadding(0, dp(5), 0, 0) })
-        } else if (item.has("dueDate")) {
-            body.addView(label(getString(R.string.aveo_reminder_due_date, item.getString("dueDate")), 12f, Color.rgb(86, 87, 92), true).apply { setPadding(0, dp(8), 0, 0) })
-        }
-        card.addView(body)
-        return card
     }
 
     private fun renderReports(items: JSONArray) {
@@ -404,7 +324,6 @@ class MiAveoActivity : AppCompatActivity() {
         for (index in 0 until length()) action(getJSONObject(index))
     }
 
-    private fun JSONArray.toObjectList() = (0 until length()).map { getJSONObject(it) }
     private fun JSONArray.toStringList() = (0 until length()).map { getString(it) }
     private fun money(value: Double) = String.format(Locale.US, "$%.2f", value)
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()

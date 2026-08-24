@@ -59,6 +59,12 @@
             android:theme="@style/FuelRecordsTheme" />
 
         <activity
+            android:name="com.aatorque.prefs.PendingActivity"
+            android:exported="false"
+            android:label="@string/aveo_pending_title"
+            android:theme="@style/FuelRecordsTheme" />
+
+        <activity
             android:name="com.aatorque.prefs.ExpenseSummaryActivity"
             android:exported="false"
             android:label="@string/expense_summary_title"

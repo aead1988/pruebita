@@ -42,7 +42,7 @@ class ExpenseSummaryActivity : AppCompatActivity() {
             finish()
         }
         findViewById<View>(R.id.expenseNavPending).setOnClickListener {
-            startActivity(Intent(this, MiAveoActivity::class.java).putExtra("section", "pending"))
+            startActivity(Intent(this, PendingActivity::class.java))
             finish()
         }
         findViewById<View>(R.id.expenseNavSettings).setOnClickListener {

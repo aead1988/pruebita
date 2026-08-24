@@ -373,6 +373,12 @@
     <string name="aveo_reminder_progress">%1$d%% completado · faltan %2$,d km</string>
     <string name="aveo_reminder_overdue">Vencido por %1$,d km</string>
     <string name="aveo_reminder_due_date">Vence: %1$s</string>
+    <string name="pending_subtitle">Revisiones y recordatorios del auto</string>
+    <string name="pending_registered">Pendientes registrados</string>
+    <string name="pending_count_format">%1$d pendientes</string>
+    <string name="pending_current_km">%1$,d km actuales</string>
+    <string name="pending_empty">No hay pendientes registrados.</string>
+    <string name="pending_no_data">Conecta la bitácora en Mi Aveo para ver los pendientes.</string>
     <string name="aveo_unknown_year">Sin año</string>
     <string name="aveo_category_documents">Documentos</string>
     <string name="aveo_category_brakes">Frenos</string>

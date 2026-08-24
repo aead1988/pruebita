@@ -358,6 +358,12 @@
     <string name="aveo_reminder_progress">%1$d%% complete · %2$,d km remaining</string>
     <string name="aveo_reminder_overdue">Overdue by %1$,d km</string>
     <string name="aveo_reminder_due_date">Due: %1$s</string>
+    <string name="pending_subtitle">Vehicle checks and reminders</string>
+    <string name="pending_registered">Registered pending items</string>
+    <string name="pending_count_format">%1$d pending</string>
+    <string name="pending_current_km">%1$,d current km</string>
+    <string name="pending_empty">No pending items are registered.</string>
+    <string name="pending_no_data">Connect the log in My Aveo to view pending items.</string>
     <string name="aveo_unknown_year">Unknown year</string>
     <string name="aveo_category_documents">Documents</string>
     <string name="aveo_category_brakes">Brakes</string>
