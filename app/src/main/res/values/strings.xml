@@ -351,6 +351,11 @@
     <string name="aveo_file_selected">Private file connected: %1$s</string>
     <string name="aveo_file_error">The file could not be read. Select a valid mi-aveo.json file.</string>
     <string name="aveo_no_file">Private log not connected</string>
+    <string name="viewer_nav_home">Home</string>
+    <string name="viewer_nav_trips">Trips</string>
+    <string name="viewer_nav_aveo">My Aveo</string>
+    <string name="viewer_nav_pending">Pending</string>
+    <string name="viewer_nav_settings">Settings</string>
     <string name="viewer_mode_chip">VIEWER</string>
     <string name="viewer_vehicle_title">Chevrolet Aveo Emotion</string>
     <string name="viewer_trips_label">Trips</string>

@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ECEDEF">
+
+<ScrollView
     android:id="@+id/viewerScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ECEDEF"
+    android:layout_marginBottom="74dp"
     android:clipToPadding="false"
     android:fillViewport="true">
 
@@ -55,38 +60,6 @@
                 android:text="⚙"
                 android:textColor="#090909"
                 android:textSize="23sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/viewer_tab_container"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/viewer_tab_selected"
-                android:gravity="center"
-                android:text="@string/viewer_tab_trips"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/viewerAveoTab"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="@string/viewer_tab_aveo"
-                android:textColor="#5F6065"
-                android:textSize="15sp"
-                android:textStyle="bold" />
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
@@ -291,3 +264,24 @@
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="74dp"
+        android:layout_gravity="bottom"
+        android:background="#FFFFFF"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="5dp">
+
+        <TextView android:id="@+id/viewerNavHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/viewer_nav_selected" android:drawableTop="@drawable/ic_viewer_home" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_home" android:textColor="#090909" android:textSize="11sp" android:textStyle="bold" />
+        <TextView android:id="@+id/viewerNavTrips" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_trips" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_trips" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/viewerNavAveo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_service" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_aveo" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/viewerNavPending" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_reminder" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_pending" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/viewerNavSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_settings" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_settings" android:textColor="#6F7075" android:textSize="11sp" />
+    </LinearLayout>
+</FrameLayout>

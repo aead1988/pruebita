@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ECEDEF"
+    android:background="#ECEDEF">
+
+<ScrollView
+    android:id="@+id/recordsScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="74dp"
     android:clipToPadding="false"
     android:fillViewport="true">
 
@@ -117,3 +123,24 @@
             android:orientation="vertical" />
     </LinearLayout>
 </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="74dp"
+        android:layout_gravity="bottom"
+        android:background="#FFFFFF"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="5dp">
+
+        <TextView android:id="@+id/recordsNavHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_home" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_home" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/recordsNavTrips" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/viewer_nav_selected" android:drawableTop="@drawable/ic_viewer_trips" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_trips" android:textColor="#090909" android:textSize="11sp" android:textStyle="bold" />
+        <TextView android:id="@+id/recordsNavAveo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_service" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_aveo" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/recordsNavPending" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_reminder" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_pending" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/recordsNavSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_settings" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_settings" android:textColor="#6F7075" android:textSize="11sp" />
+    </LinearLayout>
+</FrameLayout>

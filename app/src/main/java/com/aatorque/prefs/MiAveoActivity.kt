@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,7 @@ import java.util.Locale
 class MiAveoActivity : AppCompatActivity() {
     private lateinit var pendingList: LinearLayout
     private lateinit var maintenanceList: LinearLayout
+    private lateinit var scroll: ScrollView
 
     private val fileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) selectFile(uri)
@@ -35,9 +37,28 @@ class MiAveoActivity : AppCompatActivity() {
         supportActionBar?.hide()
         pendingList = findViewById(R.id.aveoPendingList)
         maintenanceList = findViewById(R.id.aveoMaintenanceList)
-        findViewById<TextView>(R.id.aveoTripsTab).setOnClickListener { finish() }
+        scroll = findViewById(R.id.aveoScroll)
         findViewById<View>(R.id.aveoChooseFile).setOnClickListener {
             fileLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+        }
+        findViewById<View>(R.id.aveoNavHome).setOnClickListener { finish() }
+        findViewById<View>(R.id.aveoNavTrips).setOnClickListener {
+            startActivity(Intent(this, FuelRecordsActivity::class.java))
+            finish()
+        }
+        findViewById<View>(R.id.aveoNavAveo).setOnClickListener {
+            selectNavigation(R.id.aveoNavAveo)
+            scroll.smoothScrollTo(0, 0)
+        }
+        findViewById<View>(R.id.aveoNavPending).setOnClickListener { showPending() }
+        findViewById<View>(R.id.aveoNavSettings).setOnClickListener {
+            PreferenceManager.getDefaultSharedPreferences(this).edit()
+                .putBoolean(ViewerSettingsFragment.PREF_OPEN_SETTINGS, true)
+                .apply()
+            finish()
+        }
+        if (intent.getStringExtra("section") == "pending") {
+            selectNavigation(R.id.aveoNavPending)
         }
     }
 
@@ -115,6 +136,36 @@ class MiAveoActivity : AppCompatActivity() {
         root.getJSONArray("pending").forEachObject { pendingList.addView(pendingCard(it)) }
         maintenanceList.removeAllViews()
         root.getJSONArray("maintenance").forEachObject { maintenanceList.addView(maintenanceCard(it)) }
+        if (intent.getStringExtra("section") == "pending") showPending()
+    }
+
+    private fun showPending() {
+        selectNavigation(R.id.aveoNavPending)
+        val target = findViewById<View>(R.id.aveoPendingTitle)
+        val container = findViewById<View>(R.id.aveoDataContainer)
+        scroll.post { scroll.smoothScrollTo(0, container.top + target.top) }
+    }
+
+    private fun selectNavigation(selectedId: Int) {
+        val ids = intArrayOf(
+            R.id.aveoNavHome,
+            R.id.aveoNavTrips,
+            R.id.aveoNavAveo,
+            R.id.aveoNavPending,
+            R.id.aveoNavSettings
+        )
+        ids.forEach { id ->
+            findViewById<TextView>(id).apply {
+                setBackgroundColor(Color.TRANSPARENT)
+                setTextColor(Color.rgb(111, 112, 117))
+                setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
+            }
+        }
+        findViewById<TextView>(selectedId).apply {
+            setBackgroundResource(R.drawable.viewer_nav_selected)
+            setTextColor(Color.rgb(9, 9, 9))
+            setTypeface(Typeface.DEFAULT, Typeface.BOLD)
+        }
     }
 
     private fun pendingCard(item: JSONObject): MaterialCardView {

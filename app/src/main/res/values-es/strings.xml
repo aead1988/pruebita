@@ -366,6 +366,11 @@
     <string name="aveo_file_selected">Archivo privado conectado: %1$s</string>
     <string name="aveo_file_error">No se pudo leer el archivo. Selecciona un mi-aveo.json válido.</string>
     <string name="aveo_no_file">Bitácora privada sin conectar</string>
+    <string name="viewer_nav_home">Inicio</string>
+    <string name="viewer_nav_trips">Viajes</string>
+    <string name="viewer_nav_aveo">Mi Aveo</string>
+    <string name="viewer_nav_pending">Pendientes</string>
+    <string name="viewer_nav_settings">Ajustes</string>
     <string name="viewer_mode_chip">VISOR</string>
     <string name="viewer_vehicle_title">Chevrolet Aveo Emotion</string>
     <string name="viewer_trips_label">Viajes</string>
