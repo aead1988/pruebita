@@ -76,7 +76,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/viewer_vehicle_title"
                 android:scaleType="centerInside"
-                android:src="@drawable/my_huno_front_hero" />
+                android:src="@drawable/my_huno_side_hero" />
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout

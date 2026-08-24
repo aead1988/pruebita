@@ -95,9 +95,13 @@ class SettingsActivity : AppCompatActivity(),
     }
 
     public override fun onCreate(savedInstanceState: Bundle?) {
+        val initialRole = FuelDeviceSync.role(this)
+        if (initialRole == FuelSyncRole.SECONDARY) {
+            setTheme(R.style.FuelRecordsTheme)
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        supportActionBar!!.setDisplayUseLogoEnabled(true)
+        supportActionBar?.setDisplayUseLogoEnabled(true)
         if (savedInstanceState == null) {
             val role = FuelDeviceSync.role(this)
             if (role == FuelSyncRole.DISABLED) showInitialRoleDialog() else showRootForRole(role)
@@ -110,7 +114,7 @@ class SettingsActivity : AppCompatActivity(),
                 override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                     super.onFragmentResumed(fm, f)
                     if (f is ViewerSettingsFragment) supportActionBar?.hide() else supportActionBar?.show()
-                    supportActionBar!!.subtitle = when (f) {
+                    supportActionBar?.subtitle = when (f) {
                         is SettingsDashboard -> {
                             resources.getString(
                                 R.string.pref_data_element_settings,
@@ -126,7 +130,7 @@ class SettingsActivity : AppCompatActivity(),
                             null
                         }
                     }
-                    supportActionBar!!.setDisplayHomeAsUpEnabled(
+                    supportActionBar?.setDisplayHomeAsUpEnabled(
                         f !is SettingsFragment && f !is ViewerSettingsFragment
                     )
                 }
@@ -229,8 +233,12 @@ class SettingsActivity : AppCompatActivity(),
             .putString(FuelDeviceSync.PREF_ROLE, role.value)
             .commit()
         FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
-        showRootForRole(role)
-        invalidateOptionsMenu()
+        if (role == FuelSyncRole.SECONDARY) {
+            recreate()
+        } else {
+            showRootForRole(role)
+            invalidateOptionsMenu()
+        }
     }
 
     private fun showRootForRole(role: FuelSyncRole) {
