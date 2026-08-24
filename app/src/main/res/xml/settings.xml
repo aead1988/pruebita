@@ -64,6 +64,33 @@
 
     <PreferenceCategory android:title="@string/media">
         <Preference
+            android:key="manageFuelModules"
+            android:persistent="false"
+            android:summary="@string/fuel_modules_summary"
+            android:title="@string/fuel_modules_title"
+            app:fragment="com.aatorque.prefs.FuelModuleSettingsFragment" />
+        <EditTextPreference
+            android:defaultValue="3.24"
+            android:inputType="numberDecimal"
+            android:key="fuelPricePerGallon"
+            android:summary="@string/fuel_price_per_gallon_summary"
+            android:title="@string/fuel_price_per_gallon_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="11.90"
+            android:inputType="numberDecimal"
+            android:key="fuelTankGallons"
+            android:summary="@string/fuel_tank_gallons_summary"
+            android:title="@string/fuel_tank_gallons_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="60"
+            android:inputType="number"
+            android:key="tripPauseMergeMinutes"
+            android:summary="@string/trip_pause_merge_summary"
+            android:title="@string/trip_pause_merge_title"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
             android:key="resetFuelTrip"
             android:persistent="false"
             android:summary="@string/fuel_media_reset_summary"
@@ -103,6 +130,61 @@
             app:min="50"
             app:showSeekBarValue="true" />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/monthly_history_category">
+        <Preference
+            android:key="monthlyHistoryLocation"
+            android:persistent="false"
+            android:summary="@string/monthly_history_location_not_configured"
+            android:title="@string/monthly_history_location_title" />
+        <Preference
+            android:key="exportMonthlyHistoryCsv"
+            android:persistent="false"
+            android:summary="@string/monthly_history_export_summary"
+            android:title="@string/monthly_history_export_title" />
+        <Preference
+            android:key="restoreFuelBackup"
+            android:persistent="false"
+            android:summary="@string/fuel_backup_restore_summary"
+            android:title="@string/fuel_backup_restore_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/fuel_sync_category">
+        <Preference
+            android:key="fuelRecords"
+            android:persistent="false"
+            android:summary="@string/fuel_records_preference_summary"
+            android:title="@string/fuel_records_preference_title" />
+        <ListPreference
+            android:defaultValue="disabled"
+            android:entries="@array/fuel_sync_role_entries"
+            android:entryValues="@array/fuel_sync_role_values"
+            android:key="fuelSyncRole"
+            android:summary="@string/fuel_sync_role_summary"
+            android:title="@string/fuel_sync_role_title"
+            app:useSimpleSummaryProvider="true" />
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="fuelSyncAutomatic"
+            android:summary="@string/fuel_sync_automatic_summary"
+            android:title="@string/fuel_sync_automatic_title" />
+        <Preference
+            android:key="fuelSyncViewerFile"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_viewer_file_summary"
+            android:title="@string/fuel_sync_viewer_file_title" />
+        <Preference
+            android:key="fuelSyncNow"
+            android:persistent="false"
+            android:summary="@string/fuel_sync_now_summary"
+            android:title="@string/fuel_sync_now_title" />
+        <Preference
+            android:key="fuelSyncStatus"
+            android:persistent="false"
+            android:selectable="false"
+            android:summary="@string/fuel_sync_never"
+            android:title="@string/fuel_sync_status_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

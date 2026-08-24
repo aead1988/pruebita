@@ -3,11 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="androidx.car.app.NAVIGATION_TEMPLATES" />
-    <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.google.android.gms.permission.CAR_VENDOR_EXTENSION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
@@ -21,13 +18,14 @@
 
     <queries>
         <package android:name="org.prowl.torque" />
+        <package android:name="com.spotify.music" />
     </queries>
 
     <application
         android:name="com.aatorque.stats.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/app_brand_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
@@ -38,7 +36,7 @@
         <activity
             android:name="com.aatorque.prefs.SettingsActivity"
             android:exported="true"
-            android:label="@string/activity_settings_title"
+            android:label="@string/app_brand_name"
             android:icon="@mipmap/ic_launcher"
             android:launchMode="singleTop">
             <intent-filter>
@@ -48,10 +46,22 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.aatorque.prefs.FuelRecordsActivity"
+            android:exported="false"
+            android:label="@string/fuel_records_title"
+            android:theme="@style/FuelRecordsTheme" />
+
+        <activity
+            android:name="com.aatorque.prefs.MiAveoActivity"
+            android:exported="false"
+            android:label="@string/viewer_tab_aveo"
+            android:theme="@style/FuelRecordsTheme" />
+
         <service
             android:name="com.aatorque.stats.CarService"
             android:exported="true"
-            android:label="@string/app_car_service_name"
+            android:label="@string/app_brand_name"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -74,7 +84,7 @@
         <service
             android:name=".NotiService"
             android:exported="true"
-            android:label="Enable media controls"
+            android:label="@string/app_brand_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -82,18 +92,13 @@
         </service>
 
         <service
-            android:name=".FuelEconomyMapCarAppService"
+            android:name=".FuelEconomyMediaService"
             android:exported="true"
-            android:label="@string/fuel_map_service_name">
+            android:label="@string/app_brand_name">
             <intent-filter>
-                <action android:name="androidx.car.app.CarAppService" />
-                <category android:name="androidx.car.app.category.NAVIGATION" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
-        <meta-data
-            android:name="androidx.car.app.minCarApiLevel"
-            android:value="1" />
 
         <meta-data
             android:name="com.google.android.gms.car.application"

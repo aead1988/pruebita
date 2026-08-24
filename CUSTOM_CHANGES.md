@@ -1,38 +1,54 @@
-# AA Torque 2.0.32 — consumo sobre mapa
+# AA Torque 2.0.38 — modos multimedia y portada de Spotify
 
-Esta variante se basa en AA Torque 2.0.30 y muestra el consumo de combustible dentro de una
-aplicación de mapas independiente para Android Auto.
+Esta variante se basa en AA Torque 2.0.30 y muestra datos de Torque Pro como una fuente
+multimedia de Android Auto. La vista de mapas experimental fue retirada.
 
-## Datos mostrados
+## Modos seleccionables
 
-- Rendimiento promedio del viaje en km/galón estadounidense.
-- Rendimiento instantáneo en km/galón estadounidense.
-- Distancia acumulada en kilómetros.
-- Combustible consumido en galones estadounidenses.
-- Estado de conexión con Torque Pro.
+En la biblioteca de **AA Torque Consumo** se puede elegir uno de estos modos:
 
-## Mapa
+- **Consumo:** rendimiento promedio e instantáneo, distancia y galones consumidos.
+- **Motor:** RPM, temperatura del refrigerante, carga, voltaje y velocidad.
+- **Viaje:** distancia, duración, velocidad media, costo estimado y autonomía.
+- **Diagnóstico:** temperatura, voltaje, flujo de combustible, carga, RPM y nivel del tanque.
+- **Combustible y costo:** flujo instantáneo en gal/h, kilómetros recorridos, galones usados y costo acumulado.
 
-La aplicación se anuncia en Android Auto como **AA Torque Mapa** mediante la Car App Library.
-Dibuja un mapa esquemático local, la posición GPS del vehículo y una tarjeta de consumo sobre la
-superficie del mapa. Incluye controles para acercar, alejar, centrar y reiniciar el viaje.
+El módulo **Combustible y costo** concentra sus cuatro valores en el título y subtítulo para que
+sean visibles incluso en radios que ocultan el tercer campo de metadatos multimedia.
 
-El mapa no transmite las coordenadas ni necesita descargar teselas: el GPS se proyecta localmente
-sobre una cuadrícula geográfica y un corredor vial esquemático de Ecuador. Requiere permiso de
-ubicación. Esta aplicación no modifica ni superpone contenido sobre Google Maps o Waze: al abrirla
-se convierte en el mapa activo de Android Auto.
+## Portada de Spotify
 
-## Consumo persistente
+Al activar **Portada de Spotify como fondo** y conceder acceso a notificaciones, la fuente
+multimedia usa la carátula de la canción activa de Spotify. La portada se envía como arte,
+arte de álbum e icono de pantalla para ampliar la compatibilidad con distintos hosts de Android
+Auto. Si Spotify no está activo o no hay permiso, se conserva el icono de AA Torque.
 
-La aplicación consulta en Torque Pro los PID de velocidad y flujo de combustible. Reconoce
-velocidad en km/h o mph y flujo en L/h, L/min, mL/min, cc/min o gal/h. Integra ambos valores en el
-tiempo y guarda el total cada diez segundos y al cerrar la sesión del automóvil.
+La portada se obtiene primero de la sesión multimedia de Spotify y, como respaldo, directamente
+de su notificación. El identificador multimedia cambia con cada canción para evitar que algunas
+radios conserven en caché la carátula anterior. El módulo de combustible muestra únicamente los
+valores y unidades, sin las etiquetas «Flujo», «Usados» ni «Costo».
 
-## Consideraciones
+El artista y el nombre de la canción se envían como tercer campo multimedia con el formato
+**Artista — Canción**, sin sustituir las dos líneas de telemetría. La visibilidad de esta tercera
+línea depende del diseño aplicado por cada radio o host de Android Auto.
+
+El botón de siguiente pista también cambia al modo siguiente. Android Auto controla qué campos
+y botones son visibles según la pantalla y el vehículo.
+
+## Configuración y persistencia
+
+La aplicación integra velocidad y flujo de combustible una vez por segundo y guarda distancia,
+combustible y duración cada diez segundos y al cerrar el servicio. Los datos sobreviven al apagado
+del vehículo y se pueden reiniciar desde los ajustes del teléfono.
+
+En **Ajustes > Multimedia** se pueden configurar el precio por galón y la capacidad del tanque,
+usados para calcular costo y autonomía. La autonomía también requiere el PID de nivel de combustible.
+
+## Compatibilidad
 
 - Requiere Torque Pro y un adaptador OBD2 conectado.
-- El vehículo o Torque Pro debe proporcionar un PID de flujo de combustible compatible.
-- La ubicación se concede abriendo AA Torque una vez en el teléfono.
-- El mapa local incluye el corredor Ibarra–Quito–Latacunga–Ambato–Riobamba.
-- Es una variante no oficial y debe instalarse manualmente.
+- Requiere un PID de flujo compatible; acepta L/h, L/min, mL/min, cc/min o gal/h.
+- Los valores no disponibles se muestran como `--`.
+- La fuente multimedia no reproduce música.
+- Es una variante no oficial que debe instalarse manualmente.
 - El código continúa bajo GNU GPL v3, igual que el proyecto de origen.

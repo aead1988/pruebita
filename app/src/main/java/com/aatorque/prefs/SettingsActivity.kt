@@ -1,6 +1,5 @@
 package com.aatorque.prefs
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
@@ -29,10 +28,17 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.App
 import com.aatorque.stats.BuildConfig
 import com.aatorque.stats.CreditsFragment
+import com.aatorque.stats.FuelDriveArchive
+import com.aatorque.stats.FuelDeviceSync
+import com.aatorque.stats.FuelSyncRole
+import com.aatorque.stats.FuelSyncScheduler
+import com.aatorque.stats.MonthlyFuelEconomyStore
+import com.aatorque.stats.MonthlyFuelCsvExporter
 import com.aatorque.stats.R
 import com.google.android.material.snackbar.Snackbar
 import com.google.protobuf.InvalidProtocolBufferException
@@ -53,10 +59,6 @@ import javax.net.ssl.SSLException
 
 class SettingsActivity : AppCompatActivity(),
     PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
-
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* The map screen reports if permission is still unavailable. */ }
 
     val br: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -95,24 +97,10 @@ class SettingsActivity : AppCompatActivity(),
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
         supportActionBar!!.setDisplayUseLogoEnabled(true)
         if (savedInstanceState == null) {
-            supportFragmentManager
-                .beginTransaction()
-                .replace(R.id.settings_fragment, SettingsFragment())
-                .commit()
+            val role = FuelDeviceSync.role(this)
+            if (role == FuelSyncRole.DISABLED) showInitialRoleDialog() else showRootForRole(role)
         }
         lifecycleScope.launch(Dispatchers.IO) {
             checkUpdate()
@@ -121,6 +109,7 @@ class SettingsActivity : AppCompatActivity(),
             object : FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                     super.onFragmentResumed(fm, f)
+                    if (f is ViewerSettingsFragment) supportActionBar?.hide() else supportActionBar?.show()
                     supportActionBar!!.subtitle = when (f) {
                         is SettingsDashboard -> {
                             resources.getString(
@@ -137,13 +126,17 @@ class SettingsActivity : AppCompatActivity(),
                             null
                         }
                     }
-                    supportActionBar!!.setDisplayHomeAsUpEnabled(f !is SettingsFragment)
+                    supportActionBar!!.setDisplayHomeAsUpEnabled(
+                        f !is SettingsFragment && f !is ViewerSettingsFragment
+                    )
                 }
             }, false
         )
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menu?.clear()
+        if (FuelDeviceSync.role(this) == FuelSyncRole.SECONDARY) return true
         menuInflater.inflate(R.menu.settings_menu, menu)
         return true
     }
@@ -205,6 +198,48 @@ class SettingsActivity : AppCompatActivity(),
         exportFileLauncher.launch("")
     }
 
+    fun exportMonthlyFuelHistory() {
+        monthlyFuelCsvLauncher.launch("aa-torque-monthly-fuel-history.csv")
+    }
+
+    fun configureMonthlyFuelExportLocation() {
+        monthlyExportDirectoryLauncher.launch(null)
+    }
+
+    fun restoreFuelBackup() {
+        fuelBackupRestoreLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+    }
+
+    fun selectFuelSyncViewerFile() {
+        fuelSyncViewerFileLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+    }
+
+    private fun showInitialRoleDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.initial_role_title)
+            .setMessage(R.string.initial_role_message)
+            .setPositiveButton(R.string.initial_role_primary) { _, _ -> selectInitialRole(FuelSyncRole.PRIMARY) }
+            .setNegativeButton(R.string.initial_role_viewer) { _, _ -> selectInitialRole(FuelSyncRole.SECONDARY) }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun selectInitialRole(role: FuelSyncRole) {
+        PreferenceManager.getDefaultSharedPreferences(this).edit()
+            .putString(FuelDeviceSync.PREF_ROLE, role.value)
+            .commit()
+        FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
+        showRootForRole(role)
+        invalidateOptionsMenu()
+    }
+
+    private fun showRootForRole(role: FuelSyncRole) {
+        val fragment = if (role == FuelSyncRole.SECONDARY) ViewerSettingsFragment() else SettingsFragment()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.settings_fragment, fragment)
+            .commit()
+    }
+
     private fun launchFragment(
         tag: String,
         fragment: Fragment
@@ -260,6 +295,76 @@ class SettingsActivity : AppCompatActivity(),
         }
     }
 
+    private val monthlyFuelCsvLauncher = registerForActivityResult(MonthlyCsvExportContract()) { uri: Uri? ->
+        lifecycleScope.launch(Dispatchers.IO) {
+            val exported = if (uri != null) {
+                try {
+                    val csv = MonthlyFuelEconomyStore(applicationContext).exportCsv()
+                    contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { writer ->
+                        writer.write(csv)
+                    } != null
+                } catch (error: IOException) {
+                    Timber.e(error, "Unable to export monthly fuel history")
+                    false
+                }
+            } else false
+            runOnUiThread {
+                Toast.makeText(
+                    baseContext,
+                    if (exported) R.string.monthly_history_exported else R.string.monthly_history_export_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private val monthlyExportDirectoryLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+            if (uri != null) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                    MonthlyFuelCsvExporter.setDirectory(applicationContext, uri)
+                    FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
+                    Toast.makeText(this, R.string.monthly_history_location_saved, Toast.LENGTH_SHORT).show()
+                } catch (error: SecurityException) {
+                    Timber.e(error, "Unable to persist monthly report directory permission")
+                    Toast.makeText(this, R.string.monthly_history_location_failed, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+    private val fuelBackupRestoreLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri == null) return@registerForActivityResult
+            lifecycleScope.launch(Dispatchers.IO) {
+                val restored = FuelDriveArchive.restoreBackup(applicationContext, uri)
+                runOnUiThread {
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        if (restored) R.string.fuel_backup_restored else R.string.fuel_backup_restore_failed,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
+    private val fuelSyncViewerFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri == null) return@registerForActivityResult
+            try {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                FuelDeviceSync.setViewerFile(applicationContext, uri)
+                FuelSyncScheduler.refresh(applicationContext, runImmediately = true)
+                Toast.makeText(this, R.string.fuel_sync_viewer_file_saved, Toast.LENGTH_SHORT).show()
+            } catch (error: SecurityException) {
+                Timber.e(error, "Unable to persist viewer sync file permission")
+                Toast.makeText(this, R.string.monthly_history_location_failed, Toast.LENGTH_SHORT).show()
+            }
+        }
+
     class ExportFileContract : ActivityResultContract<String, Uri?>() {
 
         override fun createIntent(context: Context, input: String): Intent {
@@ -297,6 +402,18 @@ class SettingsActivity : AppCompatActivity(),
                 null
             }
         }
+    }
+
+    class MonthlyCsvExportContract : ActivityResultContract<String, Uri?>() {
+        override fun createIntent(context: Context, input: String): Intent =
+            Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "text/csv"
+                putExtra(Intent.EXTRA_TITLE, input)
+            }
+
+        override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
+            if (resultCode == Activity.RESULT_OK) intent?.data else null
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -444,7 +561,7 @@ class SettingsActivity : AppCompatActivity(),
     private fun logsToClipboard() {
         val logs = (application as App).logTree.logToString()
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("AA Torque Log", logs.joinToString("\n")))
+        clipboard.setPrimaryClip(ClipData.newPlainText("Huno Log", logs.joinToString("\n")))
     }
 
 

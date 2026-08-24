@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ECEDEF">
+
+<ScrollView
+    android:id="@+id/aveoScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="74dp"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="40dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My Huno"
+            android:textColor="#090909"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/aveoUpdated"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="#6F7075"
+            android:textSize="14sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/aveoChooseFile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E1E2E5"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:padding="17dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/aveo_choose_file"
+                    android:textColor="#090909"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/aveoFileState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/aveo_file_prompt"
+                    android:textColor="#6F7075"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:id="@+id/aveoDataContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            app:cardBackgroundColor="#090909"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="22dp">
+
+                <TextView
+                    android:id="@+id/aveoVehicleName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/aveoVehicleDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:textColor="#B8B9BD"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aveo_kilometres" android:textColor="#9A9BA0" android:textSize="12sp" />
+                        <TextView android:id="@+id/aveoKm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="#D9FF43" android:textSize="19sp" android:textStyle="bold" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aveo_maintenances" android:textColor="#9A9BA0" android:textSize="12sp" />
+                        <TextView android:id="@+id/aveoMaintenanceCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="#FFFFFF" android:textSize="19sp" android:textStyle="bold" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aveo_pending" android:textColor="#9A9BA0" android:textSize="12sp" />
+                        <TextView android:id="@+id/aveoPendingCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="#FFFFFF" android:textSize="19sp" android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="52dp"
+                android:background="@drawable/viewer_tab_container"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="4dp">
+
+                <TextView android:id="@+id/aveoSectionServices" android:layout_width="112dp" android:layout_height="match_parent" android:background="@drawable/viewer_nav_selected" android:gravity="center" android:text="@string/aveo_section_services" android:textColor="#090909" android:textSize="14sp" android:textStyle="bold" />
+                <TextView android:id="@+id/aveoSectionDocuments" android:layout_width="112dp" android:layout_height="match_parent" android:gravity="center" android:text="@string/aveo_section_documents" android:textColor="#66676C" android:textSize="14sp" />
+                <TextView android:id="@+id/aveoSectionReminders" android:layout_width="120dp" android:layout_height="match_parent" android:gravity="center" android:text="@string/aveo_section_reminders" android:textColor="#66676C" android:textSize="14sp" />
+                <TextView android:id="@+id/aveoSectionReports" android:layout_width="108dp" android:layout_height="match_parent" android:gravity="center" android:text="@string/aveo_section_reports" android:textColor="#66676C" android:textSize="14sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:id="@+id/aveoServicesSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_history_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
+            <LinearLayout android:id="@+id/aveoMaintenanceList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/aveoDocumentsSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_documents_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
+            <LinearLayout android:id="@+id/aveoDocumentsList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/aveoRemindersSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView android:id="@+id/aveoPendingTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_reminders_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
+            <LinearLayout android:id="@+id/aveoPendingList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/aveoReportsSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_reports_title" android:textColor="#090909" android:textSize="21sp" android:textStyle="bold" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#E1E2E5"
+                app:strokeWidth="1dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aveo_total_spent" android:textColor="#77787D" android:textSize="13sp" />
+                    <TextView android:id="@+id/aveoReportTotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:textColor="#090909" android:textSize="30sp" android:textStyle="bold" />
+                    <com.aatorque.prefs.VehicleReportView android:id="@+id/aveoReportChart" android:layout_width="match_parent" android:layout_height="280dp" android:layout_marginTop="8dp" />
+                    <TextView android:id="@+id/aveoReportPercentages" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="#505156" android:textSize="14sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_marginTop="22dp" android:text="@string/aveo_expense_distribution" android:textColor="#090909" android:textSize="18sp" android:textStyle="bold" />
+            <LinearLayout android:id="@+id/aveoCategoryBreakdown" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/aveo_data_note"
+            android:textColor="#77787D"
+            android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="74dp"
+        android:layout_gravity="bottom"
+        android:background="#FFFFFF"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="6dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="5dp">
+
+        <TextView android:id="@+id/aveoNavHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_home" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_home" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/aveoNavTrips" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_trips" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_trips" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/aveoNavAveo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/viewer_nav_selected" android:drawableTop="@drawable/ic_viewer_service" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_aveo" android:textColor="#090909" android:textSize="11sp" android:textStyle="bold" />
+        <TextView android:id="@+id/aveoNavPending" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_reminder" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_pending" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/aveoNavSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_settings" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_settings" android:textColor="#6F7075" android:textSize="11sp" />
+    </LinearLayout>
+</FrameLayout>

@@ -13,11 +13,17 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import com.aatorque.datastore.UserPreference
 import com.aatorque.stats.NotiService
 import com.aatorque.stats.R
 import com.aatorque.stats.FuelEconomyStore
+import com.aatorque.stats.FuelDeviceSync
+import com.aatorque.stats.FuelSyncRole
+import com.aatorque.stats.FuelSyncScheduler
+import com.aatorque.stats.FuelSyncStatus
+import com.aatorque.stats.MonthlyFuelCsvExporter
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -25,6 +31,9 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.Collections
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var numScreensPref: EditTextPreference
@@ -39,6 +48,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
     lateinit var darkenArtPref: SeekBarPreference
     lateinit var blurArtPref: SeekBarPreference
     lateinit var resetFuelTripPref: Preference
+    lateinit var tripPauseMergePref: EditTextPreference
+    lateinit var exportMonthlyHistoryPref: Preference
+    lateinit var monthlyHistoryLocationPref: Preference
+    lateinit var restoreFuelBackupPref: Preference
+    lateinit var fuelSyncRolePref: ListPreference
+    lateinit var fuelRecordsPref: Preference
+    lateinit var fuelSyncAutomaticPref: CheckBoxPreference
+    lateinit var fuelSyncViewerFilePref: Preference
+    lateinit var fuelSyncNowPref: Preference
+    lateinit var fuelSyncStatusPref: Preference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +74,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
         blurArtPref = findPreference("blurArtwork")!!
         darkenArtPref = findPreference("darkenArtwork")!!
         resetFuelTripPref = findPreference("resetFuelTrip")!!
+        tripPauseMergePref = findPreference("tripPauseMergeMinutes")!!
+        exportMonthlyHistoryPref = findPreference("exportMonthlyHistoryCsv")!!
+        monthlyHistoryLocationPref = findPreference("monthlyHistoryLocation")!!
+        restoreFuelBackupPref = findPreference("restoreFuelBackup")!!
+        fuelSyncRolePref = findPreference(FuelDeviceSync.PREF_ROLE)!!
+        fuelRecordsPref = findPreference("fuelRecords")!!
+        fuelSyncAutomaticPref = findPreference(FuelDeviceSync.PREF_AUTO)!!
+        fuelSyncViewerFilePref = findPreference("fuelSyncViewerFile")!!
+        fuelSyncNowPref = findPreference("fuelSyncNow")!!
+        fuelSyncStatusPref = findPreference("fuelSyncStatus")!!
         themePref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         fontPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         backgroundPref.summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
@@ -170,9 +199,62 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .show()
             true
         }
+        exportMonthlyHistoryPref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).exportMonthlyFuelHistory()
+            true
+        }
+        monthlyHistoryLocationPref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).configureMonthlyFuelExportLocation()
+            true
+        }
+        restoreFuelBackupPref.setOnPreferenceClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.fuel_backup_restore_title)
+                .setMessage(R.string.fuel_backup_restore_confirm)
+                .setPositiveButton(R.string.fuel_backup_restore_action) { _, _ ->
+                    (requireActivity() as SettingsActivity).restoreFuelBackup()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            true
+        }
+        fuelSyncRolePref.setOnPreferenceChangeListener { _, newValue ->
+            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit()
+                .putString(FuelDeviceSync.PREF_ROLE, newValue as String)
+                .commit()
+            FuelSyncScheduler.refresh(requireContext(), runImmediately = true)
+            updateFuelSyncControls(FuelSyncRole.from(newValue))
+            if (FuelSyncRole.from(newValue) == FuelSyncRole.SECONDARY) requireActivity().recreate()
+            true
+        }
+        fuelRecordsPref.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
+            true
+        }
+        fuelSyncAutomaticPref.setOnPreferenceChangeListener { _, newValue ->
+            PreferenceManager.getDefaultSharedPreferences(requireContext()).edit()
+                .putBoolean(FuelDeviceSync.PREF_AUTO, newValue as Boolean)
+                .commit()
+            FuelSyncScheduler.refresh(requireContext(), runImmediately = newValue)
+            true
+        }
+        fuelSyncNowPref.setOnPreferenceClickListener {
+            synchronizePhones(showToast = true)
+            true
+        }
+        fuelSyncViewerFilePref.setOnPreferenceClickListener {
+            (requireActivity() as SettingsActivity).selectFuelSyncViewerFile()
+            true
+        }
 
         numScreensPref.setOnBindEditTextListener {
             it.inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        tripPauseMergePref.setOnBindEditTextListener {
+            it.inputType = InputType.TYPE_CLASS_NUMBER
+        }
+        tripPauseMergePref.setOnPreferenceChangeListener { _, newValue ->
+            (newValue as String).toIntOrNull()?.let { it in 0..360 } == true
         }
 
         lifecycleScope.launch {
@@ -184,6 +266,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 minMaxBelowPref.isChecked = it.minMaxBelow
                 mediaBgPref.isChecked =
                     it.albumArt && NotiService.isNotificationAccessEnabled(requireContext())
+                PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    .edit()
+                    .putBoolean(PREF_SPOTIFY_ARTWORK, it.albumArt)
+                    .apply()
                 opacityPref.value = if (it.opacity == 0) 100 else it.opacity
                 blurArtPref.value = it.blurArt
                 darkenArtPref.value = it.darkenArt
@@ -228,6 +314,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onStart()
         (requireActivity() as SettingsActivity).supportActionBar!!.subtitle = null
         updateFuelTripSummary()
+        updateMonthlyHistoryLocationSummary()
+        updateFuelSyncSummary()
+        updateFuelSyncControls(FuelDeviceSync.role(requireContext()))
+        FuelSyncScheduler.refresh(requireContext(), runImmediately = false)
+        if (FuelDeviceSync.role(requireContext()) == FuelSyncRole.SECONDARY &&
+            FuelDeviceSync.automatic(requireContext())) {
+            synchronizePhones(showToast = false)
+        }
     }
 
     private fun updateFuelTripSummary() {
@@ -239,5 +333,56 @@ class SettingsFragment : PreferenceFragmentCompat() {
             String.format(java.util.Locale.US, "%.2f", trip.fuelGallons),
             average
         )
+    }
+
+    private fun updateMonthlyHistoryLocationSummary() {
+        monthlyHistoryLocationPref.summary = if (MonthlyFuelCsvExporter.configuredDirectory(requireContext()) != null) {
+            getString(R.string.monthly_history_location_configured)
+        } else {
+            getString(R.string.monthly_history_location_not_configured)
+        }
+    }
+
+    private fun synchronizePhones(showToast: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = FuelDeviceSync.syncNow(requireContext().applicationContext)
+            launch(Dispatchers.Main) {
+                updateFuelSyncSummary()
+                if (showToast || result.status == FuelSyncStatus.UPDATED) {
+                    val message = when (result.status) {
+                        FuelSyncStatus.PUBLISHED -> R.string.fuel_sync_published
+                        FuelSyncStatus.UPDATED -> R.string.fuel_sync_updated
+                        FuelSyncStatus.UP_TO_DATE -> R.string.fuel_sync_up_to_date
+                        FuelSyncStatus.DISABLED -> R.string.fuel_sync_disabled_message
+                        FuelSyncStatus.FOLDER_REQUIRED -> R.string.monthly_history_location_required
+                        FuelSyncStatus.SOURCE_REQUIRED -> R.string.fuel_sync_source_required
+                        FuelSyncStatus.FILE_NOT_FOUND -> R.string.fuel_sync_file_not_found
+                        FuelSyncStatus.ERROR -> R.string.fuel_sync_failed
+                    }
+                    android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun updateFuelSyncSummary() {
+        val timestamp = FuelDeviceSync.lastSuccess(requireContext())
+        fuelSyncStatusPref.summary = if (timestamp > 0L) {
+            getString(
+                R.string.fuel_sync_last_format,
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
+            )
+        } else getString(R.string.fuel_sync_never)
+    }
+
+    private fun updateFuelSyncControls(role: FuelSyncRole) {
+        fuelSyncViewerFilePref.isVisible = role == FuelSyncRole.SECONDARY
+        fuelSyncViewerFilePref.summary = if (FuelDeviceSync.viewerFile(requireContext()) != null) {
+            getString(R.string.fuel_sync_viewer_file_selected)
+        } else getString(R.string.fuel_sync_viewer_file_summary)
+    }
+
+    companion object {
+        private const val PREF_SPOTIFY_ARTWORK = "spotifyArtworkEnabled"
     }
 }
