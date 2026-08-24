@@ -32,11 +32,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.77-trip-duration-inline.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.78-mi-aveo.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.77-trip-duration-inline
-          path: app/build/outputs/apk/release/My-Huno-2.0.77-trip-duration-inline.apk
+          name: My-Huno-2.0.78-mi-aveo
+          path: app/build/outputs/apk/release/My-Huno-2.0.78-mi-aveo.apk
           if-no-files-found: error

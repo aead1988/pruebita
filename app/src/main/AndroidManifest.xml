@@ -52,6 +52,12 @@
             android:label="@string/fuel_records_title"
             android:theme="@style/FuelRecordsTheme" />
 
+        <activity
+            android:name="com.aatorque.prefs.MiAveoActivity"
+            android:exported="false"
+            android:label="@string/viewer_tab_aveo"
+            android:theme="@style/FuelRecordsTheme" />
+
         <service
             android:name="com.aatorque.stats.CarService"
             android:exported="true"

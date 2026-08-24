@@ -74,6 +74,9 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
         }
+        view.findViewById<View>(R.id.viewerAveoTab).setOnClickListener {
+            startActivity(Intent(requireContext(), MiAveoActivity::class.java))
+        }
         view.findViewById<View>(R.id.viewerChooseDrive).setOnClickListener {
             (requireActivity() as SettingsActivity).selectFuelSyncViewerFile()
         }
