@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - agent/media-modes
-      - feature/2.0.81-car-notes-tank-gallons
+      - feature/2.0.82-home-pending
   pull_request:
     branches:
       - master
@@ -33,11 +33,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.81-car-notes-tank-gallons.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.82-home-pending.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.81-car-notes-tank-gallons
-          path: app/build/outputs/apk/release/My-Huno-2.0.81-car-notes-tank-gallons.apk
+          name: My-Huno-2.0.82-home-pending
+          path: app/build/outputs/apk/release/My-Huno-2.0.82-home-pending.apk
           if-no-files-found: error

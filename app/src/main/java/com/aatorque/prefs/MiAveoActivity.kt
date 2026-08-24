@@ -54,7 +54,9 @@ class MiAveoActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.aveoNavHome).setOnClickListener { finish() }
         findViewById<View>(R.id.aveoNavTrips).setOnClickListener {
-            startActivity(Intent(this, FuelRecordsActivity::class.java))
+            PreferenceManager.getDefaultSharedPreferences(this).edit()
+                .putBoolean(ViewerSettingsFragment.PREF_OPEN_TRIPS, true)
+                .apply()
             finish()
         }
         findViewById<View>(R.id.aveoNavAveo).setOnClickListener {
@@ -145,7 +147,22 @@ class MiAveoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.aveoUpdated).text = getString(R.string.aveo_updated_format, vehicle.getString("updatedAt"))
 
         pendingList.removeAllViews()
-        root.getJSONArray("pending").forEachObject { pendingList.addView(pendingCard(it)) }
+        root.getJSONArray("pending")
+            .toObjectList()
+            .sortedWith(
+                compareBy<JSONObject> {
+                    when {
+                        !it.has("dueKm") -> 2
+                        it.optInt("dueKm") <= currentKm -> 0
+                        else -> 1
+                    }
+                }.thenBy {
+                    if (it.has("dueKm")) kotlin.math.abs(it.optInt("dueKm") - currentKm)
+                    else Int.MAX_VALUE
+                }.thenBy { it.optString("dueDate", "9999-12-31") }
+                    .thenBy { it.optString("title") }
+            )
+            .forEach { pendingList.addView(pendingCard(it)) }
         maintenanceList.removeAllViews()
         documentsList.removeAllViews()
         val maintenance = root.getJSONArray("maintenance")
@@ -382,6 +399,7 @@ class MiAveoActivity : AppCompatActivity() {
         for (index in 0 until length()) action(getJSONObject(index))
     }
 
+    private fun JSONArray.toObjectList() = (0 until length()).map { getJSONObject(it) }
     private fun JSONArray.toStringList() = (0 until length()).map { getString(it) }
     private fun money(value: Double) = String.format(Locale.US, "$%.2f", value)
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()

@@ -185,6 +185,78 @@
             android:layout_marginTop="12dp"
             android:orientation="vertical" />
 
+        <LinearLayout
+            android:id="@+id/viewerTripsOverview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="14dp"
+                android:text="@string/fuel_records_overview_title"
+                android:textColor="#090909"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <include
+                    android:id="@+id/viewerTodayCard"
+                    layout="@layout/item_fuel_period"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Space android:layout_width="12dp" android:layout_height="1dp" />
+
+                <include
+                    android:id="@+id/viewerWeekCard"
+                    layout="@layout/item_fuel_period"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <include
+                    android:id="@+id/viewerMonthCard"
+                    layout="@layout/item_fuel_period"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Space android:layout_width="12dp" android:layout_height="1dp" />
+
+                <include
+                    android:id="@+id/viewerYearCard"
+                    layout="@layout/item_fuel_period"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <include
+                android:id="@+id/viewerTankCard"
+                layout="@layout/item_fuel_period"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/viewerOpenRecords"
             android:layout_width="match_parent"

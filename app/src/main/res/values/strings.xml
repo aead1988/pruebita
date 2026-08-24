@@ -347,10 +347,10 @@
     <string name="aveo_history_title">Maintenance history</string>
     <string name="aveo_section_services">Services</string>
     <string name="aveo_section_documents">Documents</string>
-    <string name="aveo_section_reminders">Reminders</string>
+    <string name="aveo_section_reminders">Pending</string>
     <string name="aveo_section_reports">Reports</string>
     <string name="aveo_documents_title">Documents and registration</string>
-    <string name="aveo_reminders_title">Vehicle reminders</string>
+    <string name="aveo_reminders_title">Pending reminders</string>
     <string name="aveo_reports_title">Reports and statistics</string>
     <string name="aveo_total_spent">Total recorded spending</string>
     <string name="aveo_expense_distribution">Expense distribution</string>

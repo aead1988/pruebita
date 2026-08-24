@@ -362,10 +362,10 @@
     <string name="aveo_history_title">Historial de mantenimiento</string>
     <string name="aveo_section_services">Servicios</string>
     <string name="aveo_section_documents">Documentos</string>
-    <string name="aveo_section_reminders">Recordatorios</string>
+    <string name="aveo_section_reminders">Pendientes</string>
     <string name="aveo_section_reports">Informes</string>
     <string name="aveo_documents_title">Documentos y matrículas</string>
-    <string name="aveo_reminders_title">Recordatorios del vehículo</string>
+    <string name="aveo_reminders_title">Recordatorios pendientes</string>
     <string name="aveo_reports_title">Informes y estadísticas</string>
     <string name="aveo_total_spent">Gasto total registrado</string>
     <string name="aveo_expense_distribution">Distribución de gastos</string>

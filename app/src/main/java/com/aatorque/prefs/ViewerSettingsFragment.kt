@@ -29,6 +29,7 @@ import com.aatorque.stats.FuelSyncStatus
 import com.aatorque.stats.FuelTripHistoryStore
 import com.aatorque.stats.MonthlyFuelEconomyStore
 import com.aatorque.stats.R
+import com.aatorque.stats.WeeklyFuelEconomyStore
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,12 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private lateinit var syncCard: View
     private lateinit var recentTripCount: TextView
     private lateinit var tripList: LinearLayout
+    private lateinit var tripsOverview: View
+    private lateinit var overviewTodayValues: TextView
+    private lateinit var overviewWeekValues: TextView
+    private lateinit var overviewMonthValues: TextView
+    private lateinit var overviewYearValues: TextView
+    private lateinit var overviewTankValues: TextView
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -70,12 +77,18 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         syncCard = view.findViewById(R.id.viewerSyncCard)
         recentTripCount = view.findViewById(R.id.viewerRecentTripCount)
         tripList = view.findViewById(R.id.viewerTripList)
+        tripsOverview = view.findViewById(R.id.viewerTripsOverview)
+        overviewTodayValues = bindPeriodCard(view, R.id.viewerTodayCard, R.string.fuel_records_today)
+        overviewWeekValues = bindPeriodCard(view, R.id.viewerWeekCard, R.string.fuel_records_week)
+        overviewMonthValues = bindPeriodCard(view, R.id.viewerMonthCard, R.string.fuel_records_month)
+        overviewYearValues = bindPeriodCard(view, R.id.viewerYearCard, R.string.fuel_records_year)
+        overviewTankValues = bindPeriodCard(view, R.id.viewerTankCard, R.string.fuel_records_since_tank)
 
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
         }
         view.findViewById<View>(R.id.viewerNavTrips).setOnClickListener {
-            startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
+            scroll.post { scroll.smoothScrollTo(0, tripsOverview.top) }
         }
         view.findViewById<View>(R.id.viewerNavAveo).setOnClickListener {
             startActivity(Intent(requireContext(), MiAveoActivity::class.java))
@@ -123,6 +136,9 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         if (preferences.getBoolean(PREF_OPEN_SETTINGS, false)) {
             preferences.edit().remove(PREF_OPEN_SETTINGS).apply()
             scroll.post { scroll.smoothScrollTo(0, syncCard.top) }
+        } else if (preferences.getBoolean(PREF_OPEN_TRIPS, false)) {
+            preferences.edit().remove(PREF_OPEN_TRIPS).apply()
+            scroll.post { scroll.smoothScrollTo(0, tripsOverview.top) }
         }
     }
 
@@ -168,7 +184,14 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private fun render() {
         val context = requireContext()
         val daily = DailyFuelEconomyStore(context).loadCurrent()
-        val monthly = MonthlyFuelEconomyStore(context).loadCurrent()
+        val weekly = WeeklyFuelEconomyStore(context).loadCurrent()
+        val monthlyStore = MonthlyFuelEconomyStore(context)
+        val monthly = monthlyStore.loadCurrent()
+        val currentYear = SimpleDateFormat("yyyy", Locale.US).format(Date())
+        val annual = monthlyStore.historyIncludingCurrent().filter { it.monthKey.startsWith(currentYear) }
+        val annualDistance = annual.sumOf { it.distanceKm }
+        val annualLiters = annual.sumOf { it.fuelLiters }
+        val annualCost = annual.sumOf { it.fuelCost }
         val trips = FuelTripHistoryStore(context).load()
         val tank = FuelEconomyStore(context).load()
         val price = PreferenceManager.getDefaultSharedPreferences(context)
@@ -178,6 +201,11 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         monthValue.text = getString(R.string.viewer_cost_value, number(monthly.fuelCost))
         tripsValue.text = trips.size.toString()
         renderRecentTrips(trips.sortedByDescending { it.startedAt })
+        overviewTodayValues.text = periodValues(daily.distanceKm, daily.fuelLiters, daily.fuelCost)
+        overviewWeekValues.text = periodValues(weekly.distanceKm, weekly.fuelLiters, weekly.fuelCost)
+        overviewMonthValues.text = periodValues(monthly.distanceKm, monthly.fuelLiters, monthly.fuelCost)
+        overviewYearValues.text = periodValues(annualDistance, annualLiters, annualCost)
+        overviewTankValues.text = periodValues(tank.distanceKm, tank.fuelLiters, tank.fuelGallons * price)
         val tankAverage = if (tank.fuelLiters > 0.0001) {
             tank.distanceKm / tank.fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
         } else null
@@ -201,6 +229,26 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     }
 
     private fun number(value: Double): String = String.format(Locale.US, "%.2f", value)
+
+    private fun bindPeriodCard(root: View, cardId: Int, titleId: Int): TextView {
+        val card = root.findViewById<View>(cardId)
+        card.findViewById<TextView>(R.id.periodTitle).setText(titleId)
+        return card.findViewById(R.id.periodValues)
+    }
+
+    private fun periodValues(distanceKm: Double, fuelLiters: Double, cost: Double): String {
+        val gallons = fuelLiters / FuelEconomySnapshot.US_GALLON_LITERS
+        val average = if (fuelLiters > 0.0001) {
+            distanceKm / fuelLiters * FuelEconomySnapshot.US_GALLON_LITERS
+        } else null
+        return getString(
+            R.string.fuel_records_period_values,
+            number(distanceKm),
+            number(gallons),
+            average?.let(::number) ?: "--",
+            number(cost)
+        )
+    }
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -315,5 +363,6 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
 
     companion object {
         const val PREF_OPEN_SETTINGS = "viewerOpenSettings"
+        const val PREF_OPEN_TRIPS = "viewerOpenTrips"
     }
 }
