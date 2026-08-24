@@ -181,7 +181,9 @@ object FuelDriveArchive {
         sinceRefuel: FuelEconomySnapshot,
         periodStartedAt: Long,
         currentJourney: FuelEconomySnapshot,
-        currentJourneyStartedAt: Long
+        currentJourneyStartedAt: Long,
+        pricePerGallon: Double,
+        gallonsPurchased: Double
     ): Uri? {
         val treeUri = MonthlyFuelCsvExporter.configuredDirectory(context) ?: return null
         return try {
@@ -211,7 +213,14 @@ object FuelDriveArchive {
                 folder,
                 "text/csv",
                 "tanqueada-${start}_a_$end.csv",
-                tankPeriodCsv(context, sinceRefuel, periodStartedAt, endedAt, history)
+                tankPeriodCsv(
+                    sinceRefuel,
+                    periodStartedAt,
+                    endedAt,
+                    history,
+                    pricePerGallon,
+                    gallonsPurchased
+                )
             )
         } catch (error: Exception) {
             Timber.e(error, "Unable to export tank period")
@@ -360,20 +369,31 @@ object FuelDriveArchive {
     }
 
     private fun tankPeriodCsv(
-        context: Context,
         totals: FuelEconomySnapshot,
         startedAt: Long,
         endedAt: Long,
-        trips: List<ArchivedTrip>
+        trips: List<ArchivedTrip>,
+        pricePerGallon: Double,
+        gallonsPurchased: Double
     ): String = buildString {
         val days = ((endedAt - startedAt).coerceAtLeast(0L) / 86_400_000L) + 1L
+        val purchasedLiters = gallonsPurchased * FuelEconomySnapshot.US_GALLON_LITERS
+        val fullTankKmPerGallon = gallonsPurchased.takeIf { it > 0.0 }?.let { totals.distanceKm / it }
+        val fullTankKmPerLiter = purchasedLiters.takeIf { it > 0.0 }?.let { totals.distanceKm / it }
+        val fullTankLitersPer100Km = totals.distanceKm.takeIf { it > 0.0 }?.let { purchasedLiters / it * 100.0 }
         append('\uFEFF')
+        append("precio_por_galon_usd,").append(number(pricePerGallon)).append("\r\n")
+        append("galones_comprados,").append(number(gallonsPurchased)).append("\r\n")
+        append("costo_compra_usd,").append(number(pricePerGallon * gallonsPurchased)).append("\r\n")
+        append("rendimiento_real_km_por_galon,").append(numberOrDash(fullTankKmPerGallon)).append("\r\n")
+        append("rendimiento_real_km_por_litro,").append(numberOrDash(fullTankKmPerLiter)).append("\r\n")
+        append("consumo_real_litros_por_100_km,").append(numberOrDash(fullTankLitersPer100Km)).append("\r\n\r\n")
         append("tipo,numero,inicio,fin,dias,distance_km,galones_usados,promedio_km_por_galon,velocidad_promedio_kmh,costo_usd,duracion_minutos,clasificacion\r\n")
         append("RESUMEN_TANQUEADA,,")
         append(dateTime(startedAt)).append(',').append(dateTime(endedAt)).append(',').append(days).append(',')
         append(number(totals.distanceKm)).append(',').append(number(totals.fuelGallons)).append(',')
         append(numberOrDash(totals.averageKmPerGallon)).append(',').append(numberOrDash(totals.averageSpeedKph)).append(',')
-        append(number(totals.fuelGallons * fuelPrice(context))).append(',')
+        append(number(totals.fuelGallons * pricePerGallon)).append(',')
         append(number(totals.elapsedSeconds / 60.0)).append(',').append("\r\n")
         trips.forEachIndexed { index, trip ->
             append("VIAJE,").append(index + 1).append(',')

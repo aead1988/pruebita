@@ -74,6 +74,21 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
         }
+        view.findViewById<View>(R.id.viewerNavTrips).setOnClickListener {
+            startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
+        }
+        view.findViewById<View>(R.id.viewerNavAveo).setOnClickListener {
+            startActivity(Intent(requireContext(), MiAveoActivity::class.java))
+        }
+        view.findViewById<View>(R.id.viewerNavPending).setOnClickListener {
+            startActivity(Intent(requireContext(), MiAveoActivity::class.java).putExtra("section", "pending"))
+        }
+        view.findViewById<View>(R.id.viewerNavSettings).setOnClickListener {
+            scroll.post { scroll.smoothScrollTo(0, syncCard.top) }
+        }
+        view.findViewById<View>(R.id.viewerNavHome).setOnClickListener {
+            scroll.smoothScrollTo(0, 0)
+        }
         view.findViewById<View>(R.id.viewerChooseDrive).setOnClickListener {
             (requireActivity() as SettingsActivity).selectFuelSyncViewerFile()
         }
@@ -104,6 +119,11 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     override fun onResume() {
         super.onResume()
         render()
+        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (preferences.getBoolean(PREF_OPEN_SETTINGS, false)) {
+            preferences.edit().remove(PREF_OPEN_SETTINGS).apply()
+            scroll.post { scroll.smoothScrollTo(0, syncCard.top) }
+        }
     }
 
     private fun confirmPrimaryRole() {
@@ -292,4 +312,8 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    companion object {
+        const val PREF_OPEN_SETTINGS = "viewerOpenSettings"
+    }
 }

@@ -55,8 +55,9 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private var observedResetGeneration = 0L
     private var selectedModuleId = FuelModuleStore.ID_FUEL_COST
     private var journeyStartedAt = System.currentTimeMillis()
-    private var tankPriceEntryMode = false
+    private var tankEntryStage = TankEntryStage.NONE
     private var pendingFuelPrice = 0.0
+    private var pendingRefuelGallons = 0.0
     private var spotifyLaunchRequested = false
     private var spotifyAutoPlayPending = true
     private var spotifySessionListener: MediaSessionManager.OnActiveSessionsChangedListener? = null
@@ -78,8 +79,8 @@ class FuelEconomyMediaService : MediaBrowserService() {
         mediaSession = MediaSession(this, "Huno selectable telemetry").apply {
             setCallback(object : MediaSession.Callback() {
                 override fun onPlay() {
-                    if (tankPriceEntryMode) {
-                        confirmTankFilled()
+                    if (tankEntryStage != TankEntryStage.NONE) {
+                        advanceTankEntry()
                         return
                     }
                     tracking = true
@@ -114,15 +115,15 @@ class FuelEconomyMediaService : MediaBrowserService() {
                 }
 
                 override fun onPause() {
-                    if (tankPriceEntryMode) return
+                    if (tankEntryStage != TankEntryStage.NONE) return
                     tracking = false
                     persistTrip()
                     publishPlaybackState()
                 }
 
                 override fun onStop() {
-                    if (tankPriceEntryMode) {
-                        cancelTankPriceEntry()
+                    if (tankEntryStage != TankEntryStage.NONE) {
+                        cancelTankEntry()
                         return
                     }
                     tracking = false
@@ -140,6 +141,10 @@ class FuelEconomyMediaService : MediaBrowserService() {
                         ACTION_PRICE_MINUS_ONE -> adjustPendingFuelPrice(-0.01)
                         ACTION_PRICE_PLUS_ONE -> adjustPendingFuelPrice(0.01)
                         ACTION_PRICE_PLUS_TEN -> adjustPendingFuelPrice(0.10)
+                        ACTION_GALLONS_MINUS_ONE -> adjustPendingRefuelGallons(-1.00)
+                        ACTION_GALLONS_MINUS_CENT -> adjustPendingRefuelGallons(-0.01)
+                        ACTION_GALLONS_PLUS_CENT -> adjustPendingRefuelGallons(0.01)
+                        ACTION_GALLONS_PLUS_ONE -> adjustPendingRefuelGallons(1.00)
                     }
                 }
             })
@@ -397,16 +402,29 @@ class FuelEconomyMediaService : MediaBrowserService() {
     }
 
     private fun publishMetadata(value: FuelEconomySnapshot) {
-        if (tankPriceEntryMode) {
+        if (tankEntryStage != TankEntryStage.NONE) {
             val artwork = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-            val price = String.format(Locale.US, "$%.2f", pendingFuelPrice)
+            val isPrice = tankEntryStage == TankEntryStage.PRICE
+            val title = if (isPrice) {
+                getString(R.string.tank_price_entry_title, String.format(Locale.US, "$%.2f", pendingFuelPrice))
+            } else {
+                getString(R.string.tank_gallons_entry_title, String.format(Locale.US, "%.2f", pendingRefuelGallons))
+            }
+            val instruction = if (isPrice) {
+                getString(R.string.tank_price_entry_instruction)
+            } else {
+                getString(
+                    R.string.tank_gallons_entry_instruction,
+                    String.format(Locale.US, "$%.2f", pendingFuelPrice * pendingRefuelGallons)
+                )
+            }
             mediaSession.setMetadata(
                 MediaMetadata.Builder()
-                    .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, MEDIA_ID_TANK_PRICE)
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, getString(R.string.tank_price_entry_title, price))
-                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, getString(R.string.tank_price_entry_title, price))
-                    .putString(MediaMetadata.METADATA_KEY_ARTIST, getString(R.string.tank_price_entry_instruction))
-                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, getString(R.string.tank_price_entry_instruction))
+                    .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, MEDIA_ID_TANK_ENTRY)
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, title)
+                    .putString(MediaMetadata.METADATA_KEY_ARTIST, instruction)
+                    .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, instruction)
                     .putBitmap(MediaMetadata.METADATA_KEY_ART, artwork)
                     .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, artwork)
                     .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, artwork)
@@ -777,21 +795,29 @@ class FuelEconomyMediaService : MediaBrowserService() {
     private fun publishPlaybackState() {
         val actions = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE or
             PlaybackState.ACTION_STOP or PlaybackState.ACTION_PLAY_FROM_MEDIA_ID or
-            (if (tankPriceEntryMode) 0L else PlaybackState.ACTION_SKIP_TO_NEXT)
+            (if (tankEntryStage != TankEntryStage.NONE) 0L else PlaybackState.ACTION_SKIP_TO_NEXT)
         val builder = PlaybackState.Builder()
             .setActions(actions)
             .setState(
-                if (tankPriceEntryMode) PlaybackState.STATE_PAUSED
+                if (tankEntryStage != TankEntryStage.NONE) PlaybackState.STATE_PAUSED
                 else if (tracking) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED,
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN,
-                if (tracking && !tankPriceEntryMode) 1f else 0f
+                if (tracking && tankEntryStage == TankEntryStage.NONE) 1f else 0f
             )
-        if (tankPriceEntryMode) {
-            builder
-                .addCustomAction(ACTION_PRICE_MINUS_TEN, getString(R.string.tank_price_minus_ten), R.drawable.arrow_back)
-                .addCustomAction(ACTION_PRICE_MINUS_ONE, getString(R.string.tank_price_minus_one), R.drawable.arrow_back)
-                .addCustomAction(ACTION_PRICE_PLUS_ONE, getString(R.string.tank_price_plus_one), R.drawable.arrow_forward)
-                .addCustomAction(ACTION_PRICE_PLUS_TEN, getString(R.string.tank_price_plus_ten), R.drawable.arrow_forward)
+        if (tankEntryStage != TankEntryStage.NONE) {
+            if (tankEntryStage == TankEntryStage.PRICE) {
+                builder
+                    .addCustomAction(ACTION_PRICE_MINUS_TEN, getString(R.string.tank_price_minus_ten), R.drawable.arrow_back)
+                    .addCustomAction(ACTION_PRICE_MINUS_ONE, getString(R.string.tank_price_minus_one), R.drawable.arrow_back)
+                    .addCustomAction(ACTION_PRICE_PLUS_ONE, getString(R.string.tank_price_plus_one), R.drawable.arrow_forward)
+                    .addCustomAction(ACTION_PRICE_PLUS_TEN, getString(R.string.tank_price_plus_ten), R.drawable.arrow_forward)
+            } else {
+                builder
+                    .addCustomAction(ACTION_GALLONS_MINUS_ONE, getString(R.string.tank_gallons_minus_one), R.drawable.arrow_back)
+                    .addCustomAction(ACTION_GALLONS_MINUS_CENT, getString(R.string.tank_gallons_minus_cent), R.drawable.arrow_back)
+                    .addCustomAction(ACTION_GALLONS_PLUS_CENT, getString(R.string.tank_gallons_plus_cent), R.drawable.arrow_forward)
+                    .addCustomAction(ACTION_GALLONS_PLUS_ONE, getString(R.string.tank_gallons_plus_one), R.drawable.arrow_forward)
+            }
             mediaSession.setPlaybackState(builder.build())
             return
         }
@@ -807,32 +833,56 @@ class FuelEconomyMediaService : MediaBrowserService() {
 
     private fun beginTankPriceEntry() {
         pendingFuelPrice = fuelPricePerGallon().coerceAtLeast(MIN_FUEL_PRICE)
-        tankPriceEntryMode = true
+        pendingRefuelGallons = FuelRefuelHistoryStore(this).load().lastOrNull()?.gallonsPurchased
+            ?.coerceIn(MIN_REFUEL_GALLONS, MAX_REFUEL_GALLONS)
+            ?: DEFAULT_REFUEL_GALLONS
+        tankEntryStage = TankEntryStage.PRICE
         publishMetadata(snapshot)
         publishPlaybackState()
     }
 
     private fun adjustPendingFuelPrice(delta: Double) {
-        if (!tankPriceEntryMode) return
+        if (tankEntryStage != TankEntryStage.PRICE) return
         pendingFuelPrice = ((pendingFuelPrice + delta).coerceAtLeast(MIN_FUEL_PRICE) * 100.0)
             .roundToInt() / 100.0
         publishMetadata(snapshot)
     }
 
+    private fun adjustPendingRefuelGallons(delta: Double) {
+        if (tankEntryStage != TankEntryStage.GALLONS) return
+        pendingRefuelGallons = ((pendingRefuelGallons + delta)
+            .coerceIn(MIN_REFUEL_GALLONS, MAX_REFUEL_GALLONS) * 100.0).roundToInt() / 100.0
+        publishMetadata(snapshot)
+    }
+
+    private fun advanceTankEntry() {
+        when (tankEntryStage) {
+            TankEntryStage.PRICE -> {
+                tankEntryStage = TankEntryStage.GALLONS
+                publishMetadata(snapshot)
+                publishPlaybackState()
+            }
+            TankEntryStage.GALLONS -> confirmTankFilled()
+            TankEntryStage.NONE -> Unit
+        }
+    }
+
     private fun confirmTankFilled() {
-        if (!tankPriceEntryMode) return
+        if (tankEntryStage != TankEntryStage.GALLONS) return
         PreferenceManager.getDefaultSharedPreferences(this).edit()
             .putString(PREF_FUEL_PRICE, String.format(Locale.US, "%.2f", pendingFuelPrice))
             .apply()
-        tankPriceEntryMode = false
-        tankFilled()
+        val price = pendingFuelPrice
+        val gallons = pendingRefuelGallons
+        tankEntryStage = TankEntryStage.NONE
+        tankFilled(price, gallons)
         publishMetadata(snapshot)
         publishPlaybackState()
     }
 
-    private fun cancelTankPriceEntry() {
-        if (!tankPriceEntryMode) return
-        tankPriceEntryMode = false
+    private fun cancelTankEntry() {
+        if (tankEntryStage == TankEntryStage.NONE) return
+        tankEntryStage = TankEntryStage.NONE
         publishMetadata(snapshot)
         publishPlaybackState()
     }
@@ -889,14 +939,16 @@ class FuelEconomyMediaService : MediaBrowserService() {
         publishMetadata(snapshot.copy(status = getString(R.string.fuel_media_trip_reset)))
     }
 
-    private fun tankFilled() {
+    private fun tankFilled(pricePerGallon: Double, gallonsPurchased: Double) {
         persistTrip()
         val report = FuelDriveArchive.exportTankPeriod(
             this,
             snapshot,
             store.tankPeriodStartTimestamp(),
             journeySnapshot,
-            journeyStartedAt
+            journeyStartedAt,
+            pricePerGallon,
+            gallonsPurchased
         )
         if (report == null) {
             val message = if (MonthlyFuelCsvExporter.configuredDirectory(this) == null) {
@@ -907,6 +959,17 @@ class FuelEconomyMediaService : MediaBrowserService() {
             android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
             return
         }
+        FuelRefuelHistoryStore(this).add(
+            FuelRefuelRecord(
+                timestamp = System.currentTimeMillis(),
+                periodStartedAt = store.tankPeriodStartTimestamp(),
+                pricePerGallon = pricePerGallon,
+                gallonsPurchased = gallonsPurchased,
+                distanceKm = snapshot.distanceKm,
+                consumedGallons = snapshot.fuelGallons,
+                elapsedSeconds = snapshot.elapsedSeconds
+            )
+        )
         store.markTankFilled()
         observedResetGeneration = store.resetGeneration()
         snapshot = FuelEconomySnapshot(0.0, 0.0, connected = torqueService != null)
@@ -1090,8 +1153,12 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val ACTION_PRICE_MINUS_ONE = "com.aatorque.stats.action.PRICE_MINUS_ONE"
         private const val ACTION_PRICE_PLUS_ONE = "com.aatorque.stats.action.PRICE_PLUS_ONE"
         private const val ACTION_PRICE_PLUS_TEN = "com.aatorque.stats.action.PRICE_PLUS_TEN"
+        private const val ACTION_GALLONS_MINUS_ONE = "com.aatorque.stats.action.GALLONS_MINUS_ONE"
+        private const val ACTION_GALLONS_MINUS_CENT = "com.aatorque.stats.action.GALLONS_MINUS_CENT"
+        private const val ACTION_GALLONS_PLUS_CENT = "com.aatorque.stats.action.GALLONS_PLUS_CENT"
+        private const val ACTION_GALLONS_PLUS_ONE = "com.aatorque.stats.action.GALLONS_PLUS_ONE"
         private const val MEDIA_ROOT_ID = "aa_torque_modes_root"
-        private const val MEDIA_ID_TANK_PRICE = "huno_tank_price"
+        private const val MEDIA_ID_TANK_ENTRY = "huno_tank_entry"
         private const val SESSION_EXTRAS_KEY_SLOT_RESERVATION_SKIP_TO_PREVIOUS =
             "android.media.playback.ALWAYS_RESERVE_SPACE_FOR.ACTION_SKIP_TO_PREVIOUS"
         private const val SAMPLE_INTERVAL_MS = 1_000L
@@ -1107,8 +1174,13 @@ class FuelEconomyMediaService : MediaBrowserService() {
         private const val SPOTIFY_PACKAGE = "com.spotify.music"
         private const val SPOTIFY_LAUNCH_REQUEST_CODE = 6202
         private const val MIN_FUEL_PRICE = 0.01
+        private const val MIN_REFUEL_GALLONS = 0.01
+        private const val MAX_REFUEL_GALLONS = 99.99
+        private const val DEFAULT_REFUEL_GALLONS = 10.00
         private const val MAX_ARTWORK_EDGE_PX = 384
         private val SPOTIFY_AUTO_PLAY_DELAYS_SECONDS = longArrayOf(1L, 4L, 10L, 20L, 35L)
         private val DAILY_CARD_RECOVERY_DELAYS_SECONDS = longArrayOf(5L, 30L)
     }
 }
+
+private enum class TankEntryStage { NONE, PRICE, GALLONS }
