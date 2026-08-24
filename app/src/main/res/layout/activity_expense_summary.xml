@@ -39,8 +39,24 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginTop="22dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/viewer_vehicle_title"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/my_huno_rear_hero" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="14dp"
                 app:cardBackgroundColor="#090909"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="0dp">

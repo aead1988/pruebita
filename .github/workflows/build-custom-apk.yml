@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - agent/media-modes
-      - feature/2.0.84-expenses-settings
+      - feature/2.0.85-vehicle-views
   pull_request:
     branches:
       - master
@@ -33,11 +33,11 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.84-expenses-settings.apk
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/My-Huno-2.0.85-vehicle-views.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: My-Huno-2.0.84-expenses-settings
-          path: app/build/outputs/apk/release/My-Huno-2.0.84-expenses-settings.apk
+          name: My-Huno-2.0.85-vehicle-views
+          path: app/build/outputs/apk/release/My-Huno-2.0.85-vehicle-views.apk
           if-no-files-found: error
