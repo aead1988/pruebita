@@ -62,7 +62,7 @@ object FuelDeviceSync {
     private const val SYNC_FOLDER = "Sincronizacion"
     private const val SYNC_FILE = "my-huno-sync.json"
     private const val SYNC_MIME = "application/json"
-    private const val SCHEMA_VERSION = 2
+    private const val SCHEMA_VERSION = 3
     private const val NOTIFICATION_CHANNEL = "my_huno_viewer_sync"
     private const val NOTIFICATION_ID = 2075
 
@@ -201,6 +201,9 @@ object FuelDeviceSync {
             .put("trips", JSONArray().apply {
                 FuelTripHistoryStore(context).load().forEach { put(it.toJson()) }
             })
+            .put("refuels", JSONArray().apply {
+                FuelRefuelHistoryStore(context).load().forEach { put(it.toJson()) }
+            })
             .put("modules", FuelModuleStore(context).exportJson())
             .put("preferences", JSONObject()
                 .put("fuelPricePerGallon", preferences.getString("fuelPricePerGallon", "3.24"))
@@ -251,6 +254,13 @@ object FuelDeviceSync {
         root.optJSONArray("trips")?.let { array ->
             FuelTripHistoryStore(context).replace(buildList {
                 for (index in 0 until array.length()) add(ArchivedTrip.fromJson(array.getJSONObject(index)))
+            })
+        }
+        root.optJSONArray("refuels")?.let { array ->
+            FuelRefuelHistoryStore(context).replace(buildList {
+                for (index in 0 until array.length()) {
+                    add(FuelRefuelRecord.fromJson(array.getJSONObject(index)))
+                }
             })
         }
         root.optJSONArray("modules")?.let { FuelModuleStore(context).restore(it) }
