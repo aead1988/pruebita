@@ -1,6 +1,7 @@
 package com.aatorque.prefs
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -11,6 +12,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,7 +27,10 @@ import java.util.Locale
 class MiAveoActivity : AppCompatActivity() {
     private lateinit var pendingList: LinearLayout
     private lateinit var maintenanceList: LinearLayout
+    private lateinit var documentsList: LinearLayout
+    private lateinit var categoryBreakdown: LinearLayout
     private lateinit var scroll: ScrollView
+    private var currentKm = 0
 
     private val fileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) selectFile(uri)
@@ -37,7 +42,13 @@ class MiAveoActivity : AppCompatActivity() {
         supportActionBar?.hide()
         pendingList = findViewById(R.id.aveoPendingList)
         maintenanceList = findViewById(R.id.aveoMaintenanceList)
+        documentsList = findViewById(R.id.aveoDocumentsList)
+        categoryBreakdown = findViewById(R.id.aveoCategoryBreakdown)
         scroll = findViewById(R.id.aveoScroll)
+        findViewById<View>(R.id.aveoSectionServices).setOnClickListener { showSection(R.id.aveoServicesSection, R.id.aveoSectionServices) }
+        findViewById<View>(R.id.aveoSectionDocuments).setOnClickListener { showSection(R.id.aveoDocumentsSection, R.id.aveoSectionDocuments) }
+        findViewById<View>(R.id.aveoSectionReminders).setOnClickListener { showSection(R.id.aveoRemindersSection, R.id.aveoSectionReminders) }
+        findViewById<View>(R.id.aveoSectionReports).setOnClickListener { showSection(R.id.aveoReportsSection, R.id.aveoSectionReports) }
         findViewById<View>(R.id.aveoChooseFile).setOnClickListener {
             fileLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
         }
@@ -120,6 +131,7 @@ class MiAveoActivity : AppCompatActivity() {
         )
         val vehicle = root.getJSONObject("vehicle")
         val summary = root.getJSONObject("summary")
+        currentKm = vehicle.getInt("currentKm")
         findViewById<TextView>(R.id.aveoVehicleName).text = vehicle.getString("name")
         findViewById<TextView>(R.id.aveoVehicleDetail).text = getString(
             R.string.aveo_vehicle_detail_format,
@@ -135,15 +147,40 @@ class MiAveoActivity : AppCompatActivity() {
         pendingList.removeAllViews()
         root.getJSONArray("pending").forEachObject { pendingList.addView(pendingCard(it)) }
         maintenanceList.removeAllViews()
-        root.getJSONArray("maintenance").forEachObject { maintenanceList.addView(maintenanceCard(it)) }
+        documentsList.removeAllViews()
+        val maintenance = root.getJSONArray("maintenance")
+        maintenance.forEachObject {
+            if (isDocument(it)) documentsList.addView(maintenanceCard(it))
+            else maintenanceList.addView(maintenanceCard(it))
+        }
+        renderReports(maintenance)
         if (intent.getStringExtra("section") == "pending") showPending()
     }
 
     private fun showPending() {
         selectNavigation(R.id.aveoNavPending)
+        showSection(R.id.aveoRemindersSection, R.id.aveoSectionReminders)
         val target = findViewById<View>(R.id.aveoPendingTitle)
         val container = findViewById<View>(R.id.aveoDataContainer)
         scroll.post { scroll.smoothScrollTo(0, container.top + target.top) }
+    }
+
+    private fun showSection(sectionId: Int, tabId: Int) {
+        intArrayOf(R.id.aveoServicesSection, R.id.aveoDocumentsSection, R.id.aveoRemindersSection, R.id.aveoReportsSection)
+            .forEach { findViewById<View>(it).visibility = if (it == sectionId) View.VISIBLE else View.GONE }
+        intArrayOf(R.id.aveoSectionServices, R.id.aveoSectionDocuments, R.id.aveoSectionReminders, R.id.aveoSectionReports)
+            .forEach { id ->
+                findViewById<TextView>(id).apply {
+                    setBackgroundColor(Color.TRANSPARENT)
+                    setTextColor(Color.rgb(102, 103, 108))
+                    setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
+                }
+            }
+        findViewById<TextView>(tabId).apply {
+            setBackgroundResource(R.drawable.viewer_nav_selected)
+            setTextColor(Color.rgb(9, 9, 9))
+            setTypeface(Typeface.DEFAULT, Typeface.BOLD)
+        }
     }
 
     private fun selectNavigation(selectedId: Int) {
@@ -189,8 +226,101 @@ class MiAveoActivity : AppCompatActivity() {
         body.addView(label(item.getString("detail"), 14f, Color.rgb(102, 103, 108)).apply {
             setPadding(0, dp(7), 0, 0)
         })
+        if (item.has("dueKm") && item.has("lastKm")) {
+            val due = item.getInt("dueKm")
+            val last = item.getInt("lastKm")
+            val progress = (((currentKm - last).toDouble() / (due - last).coerceAtLeast(1)) * 100).toInt().coerceIn(0, 100)
+            val remaining = due - currentKm
+            val color = when {
+                remaining <= 0 -> Color.rgb(220, 53, 69)
+                progress >= 80 -> Color.rgb(255, 181, 45)
+                else -> Color.rgb(150, 190, 40)
+            }
+            body.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                max = 100
+                this.progress = progress
+                progressTintList = ColorStateList.valueOf(color)
+                progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(232, 233, 236))
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(7)).apply { setMargins(0, dp(12), 0, 0) }
+            })
+            val status = if (remaining >= 0) getString(R.string.aveo_reminder_progress, progress, remaining)
+                else getString(R.string.aveo_reminder_overdue, -remaining)
+            body.addView(label(status, 12f, color, true).apply { setPadding(0, dp(5), 0, 0) })
+        } else if (item.has("dueDate")) {
+            body.addView(label(getString(R.string.aveo_reminder_due_date, item.getString("dueDate")), 12f, Color.rgb(86, 87, 92), true).apply { setPadding(0, dp(8), 0, 0) })
+        }
         card.addView(body)
         return card
+    }
+
+    private fun renderReports(items: JSONArray) {
+        var total = 0.0
+        var services = 0.0
+        var documents = 0.0
+        var known = 0
+        val yearly = linkedMapOf<String, Double>()
+        val categories = linkedMapOf<String, Double>()
+        items.forEachObject { item ->
+            if (!item.isNull("cost")) {
+                val cost = item.getDouble("cost")
+                total += cost
+                known++
+                if (isDocument(item)) documents += cost else services += cost
+                val year = Regex("20\\d{2}").find(item.optString("date"))?.value ?: getString(R.string.aveo_unknown_year)
+                yearly[year] = (yearly[year] ?: 0.0) + cost
+                val category = categoryFor(item.getString("title"))
+                categories[category] = (categories[category] ?: 0.0) + cost
+            }
+        }
+        findViewById<TextView>(R.id.aveoReportTotal).text = money(total)
+        val servicePct = if (total == 0.0) 0 else (services * 100 / total).toInt()
+        val documentPct = if (total == 0.0) 0 else 100 - servicePct
+        val coverage = if (items.length() == 0) 0 else (known * 100 / items.length())
+        findViewById<TextView>(R.id.aveoReportPercentages).text = getString(
+            R.string.aveo_report_percentages, servicePct, documentPct, coverage, known, items.length()
+        )
+        findViewById<VehicleReportView>(R.id.aveoReportChart).setData(
+            total.toFloat(), services.toFloat(), documents.toFloat(),
+            yearly.entries.sortedByDescending { it.key }.map { it.key to it.value.toFloat() }
+        )
+        categoryBreakdown.removeAllViews()
+        categories.entries.sortedByDescending { it.value }.forEach { (name, value) ->
+            categoryBreakdown.addView(categoryCard(name, value, total))
+        }
+    }
+
+    private fun categoryCard(name: String, value: Double, total: Double): MaterialCardView {
+        val percent = if (total == 0.0) 0 else (value * 100 / total).toInt()
+        val card = baseCard()
+        val body = verticalBody()
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.addView(label(name, 15f, Color.rgb(9, 9, 9), true).apply { layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f) })
+        top.addView(label("$percent% · ${money(value)}", 13f, Color.rgb(70, 71, 76), true))
+        body.addView(top)
+        body.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = percent
+            progressTintList = ColorStateList.valueOf(Color.rgb(217, 255, 67))
+            progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(232, 233, 236))
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(8)).apply { setMargins(0, dp(10), 0, 0) }
+        })
+        card.addView(body)
+        return card
+    }
+
+    private fun isDocument(item: JSONObject) = item.optString("title").contains("matrícula", ignoreCase = true)
+
+    private fun categoryFor(title: String): String {
+        val value = title.lowercase(Locale.getDefault())
+        return when {
+            "matrícula" in value -> getString(R.string.aveo_category_documents)
+            listOf("freno", "disco", "pastilla", "tambor").any(value::contains) -> getString(R.string.aveo_category_brakes)
+            listOf("embrague", "caja", "transmisión").any(value::contains) -> getString(R.string.aveo_category_transmission)
+            listOf("suspensión", "rotación", "balanceo", "alineación", "rodamiento").any(value::contains) -> getString(R.string.aveo_category_suspension)
+            listOf("batería", "eléctric").any(value::contains) -> getString(R.string.aveo_category_electrical)
+            listOf("aceite", "distribución", "anticongelante", "inyección", "encendido", "cabezote", "termostato", "motor").any(value::contains) -> getString(R.string.aveo_category_engine)
+            else -> getString(R.string.aveo_category_other)
+        }
     }
 
     private fun maintenanceCard(item: JSONObject): MaterialCardView {
