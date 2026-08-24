@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -42,7 +41,6 @@ class FuelRecordsActivity : AppCompatActivity() {
     private lateinit var tripCount: TextView
     private lateinit var tripList: LinearLayout
     private lateinit var syncButton: TextView
-    private lateinit var scroll: ScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,17 +56,24 @@ class FuelRecordsActivity : AppCompatActivity() {
         tripCount = findViewById(R.id.recordsTripCount)
         tripList = findViewById(R.id.recordsTripList)
         syncButton = findViewById(R.id.recordsSyncButton)
-        scroll = findViewById(R.id.recordsScroll)
         findViewById<View>(R.id.recordsBackButton).setOnClickListener { finish() }
         syncButton.setOnClickListener { synchronize(showToast = true) }
-        findViewById<View>(R.id.recordsNavHome).setOnClickListener { finish() }
-        findViewById<View>(R.id.recordsNavTrips).setOnClickListener { scroll.smoothScrollTo(0, 0) }
+        findViewById<View>(R.id.recordsNavHome).setOnClickListener {
+            PreferenceManager.getDefaultSharedPreferences(this).edit()
+                .putBoolean(ViewerSettingsFragment.PREF_OPEN_HOME, true)
+                .apply()
+            finish()
+        }
         findViewById<View>(R.id.recordsNavAveo).setOnClickListener {
             startActivity(Intent(this, MiAveoActivity::class.java))
             finish()
         }
         findViewById<View>(R.id.recordsNavPending).setOnClickListener {
             startActivity(Intent(this, MiAveoActivity::class.java).putExtra("section", "pending"))
+            finish()
+        }
+        findViewById<View>(R.id.recordsNavExpenses).setOnClickListener {
+            startActivity(Intent(this, ExpenseSummaryActivity::class.java))
             finish()
         }
         findViewById<View>(R.id.recordsNavSettings).setOnClickListener {

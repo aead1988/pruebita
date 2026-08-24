@@ -51,10 +51,9 @@ class MiAveoActivity : AppCompatActivity() {
         findViewById<View>(R.id.aveoChooseFile).setOnClickListener {
             fileLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
         }
-        findViewById<View>(R.id.aveoNavHome).setOnClickListener { finish() }
-        findViewById<View>(R.id.aveoNavTrips).setOnClickListener {
+        findViewById<View>(R.id.aveoNavHome).setOnClickListener {
             PreferenceManager.getDefaultSharedPreferences(this).edit()
-                .putBoolean(ViewerSettingsFragment.PREF_OPEN_TRIPS, true)
+                .putBoolean(ViewerSettingsFragment.PREF_OPEN_HOME, true)
                 .apply()
             finish()
         }
@@ -64,6 +63,10 @@ class MiAveoActivity : AppCompatActivity() {
             scroll.smoothScrollTo(0, 0)
         }
         findViewById<View>(R.id.aveoNavPending).setOnClickListener { showPending() }
+        findViewById<View>(R.id.aveoNavExpenses).setOnClickListener {
+            startActivity(Intent(this, ExpenseSummaryActivity::class.java))
+            finish()
+        }
         findViewById<View>(R.id.aveoNavSettings).setOnClickListener {
             PreferenceManager.getDefaultSharedPreferences(this).edit()
                 .putBoolean(ViewerSettingsFragment.PREF_OPEN_SETTINGS, true)
@@ -205,9 +208,9 @@ class MiAveoActivity : AppCompatActivity() {
     private fun selectNavigation(selectedId: Int) {
         val ids = intArrayOf(
             R.id.aveoNavHome,
-            R.id.aveoNavTrips,
             R.id.aveoNavAveo,
             R.id.aveoNavPending,
+            R.id.aveoNavExpenses,
             R.id.aveoNavSettings
         )
         ids.forEach { id ->

@@ -45,10 +45,10 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     private lateinit var tankValue: TextView
     private lateinit var automaticSwitch: MaterialSwitch
     private lateinit var scroll: ScrollView
+    private lateinit var settingsScroll: ScrollView
     private lateinit var syncCard: View
     private lateinit var recentTripCount: TextView
     private lateinit var tripList: LinearLayout
-    private lateinit var tripsOverview: View
     private lateinit var overviewTodayValues: TextView
     private lateinit var overviewWeekValues: TextView
     private lateinit var overviewMonthValues: TextView
@@ -63,6 +63,7 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         scroll = view.findViewById(R.id.viewerScroll)
+        settingsScroll = view.findViewById(R.id.viewerSettingsScroll)
         syncState = view.findViewById(R.id.viewerSyncState)
         fileState = view.findViewById(R.id.viewerFileState)
         tankValue = view.findViewById(R.id.viewerTankValue)
@@ -70,7 +71,6 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         syncCard = view.findViewById(R.id.viewerSyncCard)
         recentTripCount = view.findViewById(R.id.viewerRecentTripCount)
         tripList = view.findViewById(R.id.viewerTripList)
-        tripsOverview = view.findViewById(R.id.viewerTripsOverview)
         overviewTodayValues = bindPeriodCard(view, R.id.viewerTodayCard, R.string.fuel_records_today)
         overviewWeekValues = bindPeriodCard(view, R.id.viewerWeekCard, R.string.fuel_records_week)
         overviewMonthValues = bindPeriodCard(view, R.id.viewerMonthCard, R.string.fuel_records_month)
@@ -81,27 +81,27 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         view.findViewById<View>(R.id.viewerOpenRecords).setOnClickListener {
             startActivity(Intent(requireContext(), FuelRecordsActivity::class.java))
         }
-        view.findViewById<View>(R.id.viewerNavTrips).setOnClickListener {
-            scroll.post { scroll.smoothScrollTo(0, tripsOverview.top) }
-        }
         view.findViewById<View>(R.id.viewerNavAveo).setOnClickListener {
             startActivity(Intent(requireContext(), MiAveoActivity::class.java))
         }
         view.findViewById<View>(R.id.viewerNavPending).setOnClickListener {
             startActivity(Intent(requireContext(), MiAveoActivity::class.java).putExtra("section", "pending"))
         }
+        view.findViewById<View>(R.id.viewerNavExpenses).setOnClickListener {
+            startActivity(Intent(requireContext(), ExpenseSummaryActivity::class.java))
+        }
         view.findViewById<View>(R.id.viewerNavSettings).setOnClickListener {
-            scroll.post { scroll.smoothScrollTo(0, syncCard.top) }
+            showSettings()
         }
         view.findViewById<View>(R.id.viewerNavHome).setOnClickListener {
-            scroll.smoothScrollTo(0, 0)
+            showHome()
         }
         view.findViewById<View>(R.id.viewerChooseDrive).setOnClickListener {
             (requireActivity() as SettingsActivity).selectFuelSyncViewerFile()
         }
         view.findViewById<View>(R.id.viewerSyncNow).setOnClickListener { synchronize(showToast = true) }
         view.findViewById<View>(R.id.viewerSettingsButton).setOnClickListener {
-            scroll.smoothScrollTo(0, syncCard.top)
+            showSettings()
         }
         view.findViewById<View>(R.id.viewerChangeRole).setOnClickListener { confirmPrimaryRole() }
 
@@ -132,10 +132,45 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         if (preferences.getBoolean(PREF_OPEN_SETTINGS, false)) {
             preferences.edit().remove(PREF_OPEN_SETTINGS).apply()
-            scroll.post { scroll.smoothScrollTo(0, syncCard.top) }
-        } else if (preferences.getBoolean(PREF_OPEN_TRIPS, false)) {
-            preferences.edit().remove(PREF_OPEN_TRIPS).apply()
-            scroll.post { scroll.smoothScrollTo(0, tripsOverview.top) }
+            showSettings()
+        } else if (preferences.getBoolean(PREF_OPEN_HOME, false)) {
+            preferences.edit().remove(PREF_OPEN_HOME).apply()
+            showHome()
+        }
+    }
+
+    private fun showHome() {
+        settingsScroll.visibility = View.GONE
+        scroll.visibility = View.VISIBLE
+        scroll.post { scroll.smoothScrollTo(0, 0) }
+        selectNavigation(R.id.viewerNavHome)
+    }
+
+    private fun showSettings() {
+        scroll.visibility = View.GONE
+        settingsScroll.visibility = View.VISIBLE
+        settingsScroll.post { settingsScroll.smoothScrollTo(0, 0) }
+        selectNavigation(R.id.viewerNavSettings)
+    }
+
+    private fun selectNavigation(selectedId: Int) {
+        intArrayOf(
+            R.id.viewerNavHome,
+            R.id.viewerNavAveo,
+            R.id.viewerNavPending,
+            R.id.viewerNavExpenses,
+            R.id.viewerNavSettings
+        ).forEach { id ->
+            view?.findViewById<TextView>(id)?.apply {
+                setBackgroundColor(Color.TRANSPARENT)
+                setTextColor(Color.rgb(111, 112, 117))
+                setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.NORMAL)
+            }
+        }
+        view?.findViewById<TextView>(selectedId)?.apply {
+            setBackgroundResource(R.drawable.viewer_nav_selected)
+            setTextColor(Color.rgb(9, 9, 9))
+            setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
         }
     }
 
@@ -355,6 +390,6 @@ class ViewerSettingsFragment : Fragment(R.layout.fragment_viewer_dashboard) {
 
     companion object {
         const val PREF_OPEN_SETTINGS = "viewerOpenSettings"
-        const val PREF_OPEN_TRIPS = "viewerOpenTrips"
+        const val PREF_OPEN_HOME = "viewerOpenHome"
     }
 }

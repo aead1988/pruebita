@@ -391,6 +391,7 @@
     <string name="viewer_nav_trips">Viajes</string>
     <string name="viewer_nav_aveo">Mi Aveo</string>
     <string name="viewer_nav_pending">Pendientes</string>
+    <string name="viewer_nav_expenses">Gastos</string>
     <string name="viewer_nav_settings">Ajustes</string>
     <string name="viewer_mode_chip">VISOR</string>
     <string name="viewer_vehicle_title">Chevrolet Aveo Emotion</string>
@@ -416,6 +417,19 @@
     <string name="viewer_analysis_average">%1$s km/gal promedio · %2$s km analizados</string>
     <string name="viewer_analysis_empty">Los gráficos aparecerán después del primer viaje registrado.</string>
     <string name="viewer_analysis_description">Gráficos de eficiencia y distancia de los viajes</string>
+    <string name="viewer_settings_title">Ajustes</string>
+    <string name="viewer_settings_subtitle">Registros, sincronización y configuración del dispositivo</string>
+    <string name="expense_summary_title">Gastos</string>
+    <string name="expense_summary_subtitle">Resumen conjunto de gastos del vehículo</string>
+    <string name="expense_total_registered">Total registrado</string>
+    <string name="expense_fuel">Combustible</string>
+    <string name="expense_maintenance">Mantenimientos</string>
+    <string name="expense_registration">Matrícula</string>
+    <string name="expense_distribution_title">Distribución de gastos</string>
+    <string name="expense_distribution_description">Gráfico comparativo de combustible, mantenimientos y matrícula</string>
+    <string name="expense_distribution_accessibility">Combustible %1$s, mantenimientos %2$s, matrícula %3$s</string>
+    <string name="expense_source_ready">Combustible usa el historial de viajes; mantenimientos y matrícula usan la bitácora de Mi Aveo.</string>
+    <string name="expense_source_missing">Combustible está disponible. Conecta la bitácora de Mi Aveo para incluir mantenimientos y matrícula.</string>
     <string name="viewer_notification_channel">Sincronización del visor</string>
     <string name="viewer_notification_title">My Huno actualizado</string>
     <string name="viewer_notification_text">%1$d viajes · Hoy: %2$s km y $%3$s</string>

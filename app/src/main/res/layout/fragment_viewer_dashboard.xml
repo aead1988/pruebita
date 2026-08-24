@@ -14,6 +14,7 @@
     android:fillViewport="true">
 
     <LinearLayout
+        android:id="@+id/viewerHomeContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -211,6 +212,43 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
+    </LinearLayout>
+</ScrollView>
+
+<ScrollView
+    android:id="@+id/viewerSettingsScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="74dp"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="40dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/viewer_settings_title"
+            android:textColor="#090909"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/viewer_settings_subtitle"
+            android:textColor="#6F7075"
+            android:textSize="14sp" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/viewerOpenRecords"
             android:layout_width="match_parent"
@@ -305,9 +343,9 @@
         android:paddingBottom="5dp">
 
         <TextView android:id="@+id/viewerNavHome" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@drawable/viewer_nav_selected" android:drawableTop="@drawable/ic_viewer_home" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_home" android:textColor="#090909" android:textSize="11sp" android:textStyle="bold" />
-        <TextView android:id="@+id/viewerNavTrips" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_trips" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_trips" android:textColor="#6F7075" android:textSize="11sp" />
         <TextView android:id="@+id/viewerNavAveo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_service" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_aveo" android:textColor="#6F7075" android:textSize="11sp" />
         <TextView android:id="@+id/viewerNavPending" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_reminder" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_pending" android:textColor="#6F7075" android:textSize="11sp" />
+        <TextView android:id="@+id/viewerNavExpenses" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_expenses" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_expenses" android:textColor="#6F7075" android:textSize="11sp" />
         <TextView android:id="@+id/viewerNavSettings" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:drawableTop="@drawable/ic_viewer_settings" android:drawablePadding="3dp" android:gravity="center" android:text="@string/viewer_nav_settings" android:textColor="#6F7075" android:textSize="11sp" />
     </LinearLayout>
 </FrameLayout>

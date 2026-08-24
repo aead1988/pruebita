@@ -376,6 +376,7 @@
     <string name="viewer_nav_trips">Trips</string>
     <string name="viewer_nav_aveo">My Aveo</string>
     <string name="viewer_nav_pending">Pending</string>
+    <string name="viewer_nav_expenses">Expenses</string>
     <string name="viewer_nav_settings">Settings</string>
     <string name="viewer_mode_chip">VIEWER</string>
     <string name="viewer_vehicle_title">Chevrolet Aveo Emotion</string>
@@ -401,6 +402,19 @@
     <string name="viewer_analysis_average">%1$s km/gal average · %2$s km analyzed</string>
     <string name="viewer_analysis_empty">The charts will appear after the first recorded trip.</string>
     <string name="viewer_analysis_description">Charts of trip efficiency and distance</string>
+    <string name="viewer_settings_title">Settings</string>
+    <string name="viewer_settings_subtitle">Records, synchronization and device configuration</string>
+    <string name="expense_summary_title">Expenses</string>
+    <string name="expense_summary_subtitle">Combined vehicle expense summary</string>
+    <string name="expense_total_registered">Total recorded</string>
+    <string name="expense_fuel">Fuel</string>
+    <string name="expense_maintenance">Maintenance</string>
+    <string name="expense_registration">Registration</string>
+    <string name="expense_distribution_title">Expense distribution</string>
+    <string name="expense_distribution_description">Chart comparing fuel, maintenance and registration expenses</string>
+    <string name="expense_distribution_accessibility">Fuel %1$s, maintenance %2$s, registration %3$s</string>
+    <string name="expense_source_ready">Fuel uses the trip history; maintenance and registration use the My Aveo log.</string>
+    <string name="expense_source_missing">Fuel is available. Connect the My Aveo log to include maintenance and registration.</string>
     <string name="viewer_notification_channel">Viewer synchronization</string>
     <string name="viewer_notification_title">My Huno updated</string>
     <string name="viewer_notification_text">%1$d trips · Today: %2$s km and $%3$s</string>
